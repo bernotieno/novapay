@@ -62,7 +62,7 @@ novapay/
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/bernotieno/novapay.git
 cd novapay
 ```
 
@@ -111,14 +111,6 @@ To democratize cross-border payments and bring financial inclusion to every corn
 
 We welcome contributions! Please feel free to submit a Pull Request.
 
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 📞 Contact
-
-For questions, support, or partnership inquiries, please reach out through our contact page or email us directly.
-
 ---
 
-**Built by Africans, for Africa** 🌍
+**Built by Africans, for Africa** 
