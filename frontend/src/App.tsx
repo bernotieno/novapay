@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
+import AuthGuard from './components/AuthGuard';
 import Landing from './pages/Landing';
 import About from './pages/About';
 import Contact from './pages/Contact';
@@ -43,7 +44,11 @@ function App() {
         <Route path="/register" element={<Register />} />
         
         {/* Dashboard route without MainLayout */}
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard" element={
+          <AuthGuard>
+            <Dashboard />
+          </AuthGuard>
+        } />
       </Routes>
     </Router>
   );

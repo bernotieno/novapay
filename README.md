@@ -24,8 +24,15 @@ NovaPay enables instant, secure, and ultra-low-cost money transfers to Kenya, Ug
 - **Tailwind CSS** for styling
 - **Lucide React** for icons
 
+### Backend
+- **Rust + Axum** for high-performance API server
+- **JWT Authentication** with Argon2 password hashing
+- **SQLite/PostgreSQL** for data persistence
+- **Stellar SDK** integration for blockchain operations
+
 ### Blockchain
 - **Stellar Network** for fast, low-cost transactions
+- **Soroban Smart Contracts** for remittance logic
 - Cross-border payment optimization
 - Multi-currency support
 
@@ -48,7 +55,17 @@ novapay/
 │   │   ├── pages/          # Application pages
 │   │   └── App.tsx         # Main application component
 │   └── package.json
-├── backend/                # Backend services (to be implemented)
+├── backend/                # Rust backend services
+│   ├── src/
+│   │   ├── handlers/       # API route handlers
+│   │   ├── middleware/     # Authentication middleware
+│   │   ├── models/         # Data models
+│   │   ├── services/       # Business logic
+│   │   └── main.rs         # Application entry point
+│   ├── soroban-contract/   # Stellar smart contracts
+│   ├── migrations/         # Database migrations
+│   ├── Cargo.toml          # Rust dependencies
+│   └── API.md              # API documentation
 └── README.md
 ```
 
@@ -57,6 +74,8 @@ novapay/
 ### Prerequisites
 - Node.js 18+ 
 - npm or yarn
+- Rust 1.70+ (for backend)
+- SQLite3 (for database)
 
 ### Installation
 
@@ -77,7 +96,13 @@ npm install
 npm run dev
 ```
 
-4. Open your browser and navigate to `http://localhost:5173`
+4. **Start the backend** (in a new terminal):
+```bash
+cd backend
+./start.sh
+```
+
+5. Open your browser and navigate to `http://localhost:5173`
 
 ### Available Scripts
 
@@ -100,8 +125,10 @@ To democratize cross-border payments and bring financial inclusion to every corn
 
 ## 🔮 Roadmap
 
-- [ ] Backend API development
-- [ ] Stellar blockchain integration
+- [x] Backend API development
+- [x] Stellar blockchain integration
+- [x] JWT Authentication system
+- [x] Soroban smart contracts
 - [ ] Mobile money provider partnerships
 - [ ] Multi-country expansion
 - [ ] Additional financial services (savings, micro-loans)

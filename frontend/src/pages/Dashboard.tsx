@@ -15,6 +15,7 @@ import {
 import Button from '../components/Button';
 import FormInput from '../components/FormInput';
 import Card from '../components/Card';
+import { apiService, type Transaction as ApiTransaction } from '../services/api';
 
 interface Transaction {
   id: string;
@@ -40,48 +41,42 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
+    const token = localStorage.getItem('novapay_token');
+    if (!token) {
       navigate('/login');
       return;
     }
     
-    setUser(JSON.parse(userData));
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
     
-    // Mock transaction data
-    setTransactions([
-      {
-        id: '1',
-        recipient: '+254712345678',
-        amount: 1200,
-        currency: 'KES',
-        status: 'completed',
-        date: '2025-01-23T10:30:00Z',
-        fee: 0.5,
-      },
-      {
-        id: '2',
-        recipient: '+256701234567',
-        amount: 850,
-        currency: 'UGX',
-        status: 'completed',
-        date: '2025-01-22T15:45:00Z',
-        fee: 0.5,
-      },
-      {
-        id: '3',
-        recipient: '+254722222222',
-        amount: 2500,
-        currency: 'KES',
-        status: 'pending',
-        date: '2025-01-23T14:20:00Z',
-        fee: 0.5,
-      },
-    ]);
+    // Load transaction history
+    loadTransactions();
   }, [navigate]);
+
+  const loadTransactions = async () => {
+    try {
+      const apiTransactions = await apiService.getTransactionHistory();
+      const formattedTransactions = apiTransactions.map(tx => ({
+        id: tx.id,
+        recipient: tx.recipient_email,
+        amount: tx.amount,
+        currency: tx.target_currency,
+        status: tx.status as 'completed' | 'pending' | 'failed',
+        date: tx.created_at,
+        fee: 0.5,
+      }));
+      setTransactions(formattedTransactions);
+    } catch (error) {
+      console.error('Failed to load transactions:', error);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    localStorage.removeItem('novapay_token');
     navigate('/');
   };
 
@@ -89,25 +84,23 @@ const Dashboard: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate sending money
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    try {
+      await apiService.sendMoney(
+        sendForm.recipient,
+        parseFloat(sendForm.amount),
+        'USD',
+        sendForm.currency
+      );
+      
+      setSendForm({ amount: '', recipient: '', recipientName: '', currency: 'KES' });
+      setShowSendForm(false);
+      loadTransactions(); // Reload transactions
+      alert('Money sent successfully! Your recipient will receive an SMS confirmation.');
+    } catch (error) {
+      alert('Failed to send money. Please try again.');
+    }
     
-    const newTransaction: Transaction = {
-      id: Date.now().toString(),
-      recipient: sendForm.recipient,
-      amount: parseFloat(sendForm.amount),
-      currency: sendForm.currency,
-      status: 'completed',
-      date: new Date().toISOString(),
-      fee: 0.5,
-    };
-    
-    setTransactions(prev => [newTransaction, ...prev]);
-    setSendForm({ amount: '', recipient: '', recipientName: '', currency: 'KES' });
-    setShowSendForm(false);
     setIsLoading(false);
-    
-    alert('Money sent successfully! Your recipient will receive an SMS confirmation.');
   };
 
   const getStatusIcon = (status: string) => {

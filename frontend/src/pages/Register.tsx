@@ -4,6 +4,7 @@ import { Eye, EyeOff, UserPlus, Check } from 'lucide-react';
 import Button from '../components/Button';
 import FormInput from '../components/FormInput';
 import AuthLayout from '../layouts/AuthLayout';
+import { apiService } from '../services/api';
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -55,15 +56,14 @@ const Register: React.FC = () => {
 
     setIsLoading(true);
     
-    // Simulate registration process
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // For demo purposes, accept any valid form
-    localStorage.setItem('user', JSON.stringify({ 
-      email: formData.email, 
-      name: formData.name 
-    }));
-    navigate('/dashboard');
+    try {
+      const response = await apiService.register(formData.email, formData.password, formData.name);
+      localStorage.setItem('novapay_token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      navigate('/dashboard');
+    } catch (error) {
+      alert('Registration failed. Please try again.');
+    }
     
     setIsLoading(false);
   };

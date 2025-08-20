@@ -4,6 +4,7 @@ import { Eye, EyeOff, LogIn } from 'lucide-react';
 import Button from '../components/Button';
 import FormInput from '../components/FormInput';
 import AuthLayout from '../layouts/AuthLayout';
+import { apiService } from '../services/api';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -18,15 +19,13 @@ const Login: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate login process
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // For demo purposes, accept any email/password
-    if (formData.email && formData.password) {
-      localStorage.setItem('user', JSON.stringify({ email: formData.email, name: 'Demo User' }));
+    try {
+      const response = await apiService.login(formData.email, formData.password);
+      localStorage.setItem('novapay_token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
       navigate('/dashboard');
-    } else {
-      alert('Please fill in all fields');
+    } catch (error) {
+      alert('Login failed. Please check your credentials.');
     }
     
     setIsLoading(false);
