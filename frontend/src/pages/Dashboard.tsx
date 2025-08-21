@@ -10,11 +10,15 @@ import {
   LogOut,
   CreditCard,
   Activity,
-  DollarSign
+  DollarSign,
+  Smartphone,
+  ArrowUpRight,
+  ArrowDownLeft
 } from 'lucide-react';
 import Button from '../components/Button';
 import FormInput from '../components/FormInput';
 import Card from '../components/Card';
+import WalletCard from '../components/WalletCard';
 import { apiService, type Transaction as ApiTransaction } from '../services/api';
 
 interface Transaction {
@@ -30,13 +34,20 @@ interface Transaction {
 const Dashboard: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [walletBalance, setWalletBalance] = useState({ xlm_balance: 0, kes_equivalent: 0, wallet_id: '' });
   const [showSendForm, setShowSendForm] = useState(false);
+  const [showDepositForm, setShowDepositForm] = useState(false);
+  const [showWithdrawForm, setShowWithdrawForm] = useState(false);
+  const [showTransferForm, setShowTransferForm] = useState(false);
   const [sendForm, setSendForm] = useState({
     amount: '',
     recipient: '',
     recipientName: '',
     currency: 'KES',
   });
+  const [depositForm, setDepositForm] = useState({ amount: '', mpesaRef: '' });
+  const [withdrawForm, setWithdrawForm] = useState({ amount: '', mpesaNumber: '' });
+  const [transferForm, setTransferForm] = useState({ amount: '', walletId: '' });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -52,8 +63,9 @@ const Dashboard: React.FC = () => {
       setUser(JSON.parse(userData));
     }
     
-    // Load transaction history
+    // Load transaction history and wallet balance
     loadTransactions();
+    loadWalletBalance();
   }, [navigate]);
 
   const loadTransactions = async () => {
@@ -71,6 +83,15 @@ const Dashboard: React.FC = () => {
       setTransactions(formattedTransactions);
     } catch (error) {
       console.error('Failed to load transactions:', error);
+    }
+  };
+
+  const loadWalletBalance = async () => {
+    try {
+      const balance = await apiService.getWalletBalance();
+      setWalletBalance(balance);
+    } catch (error) {
+      console.error('Failed to load wallet balance:', error);
     }
   };
 
@@ -98,6 +119,60 @@ const Dashboard: React.FC = () => {
       alert('Money sent successfully! Your recipient will receive an SMS confirmation.');
     } catch (error) {
       alert('Failed to send money. Please try again.');
+    }
+    
+    setIsLoading(false);
+  };
+
+  const handleDeposit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      await apiService.depositFromMpesa(parseFloat(depositForm.amount), depositForm.mpesaRef);
+      setDepositForm({ amount: '', mpesaRef: '' });
+      setShowDepositForm(false);
+      loadWalletBalance();
+      loadTransactions();
+      alert('Deposit successful! Your wallet has been funded.');
+    } catch (error) {
+      alert('Failed to deposit. Please try again.');
+    }
+    
+    setIsLoading(false);
+  };
+
+  const handleWithdraw = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      await apiService.withdrawToMpesa(parseFloat(withdrawForm.amount), withdrawForm.mpesaNumber);
+      setWithdrawForm({ amount: '', mpesaNumber: '' });
+      setShowWithdrawForm(false);
+      loadWalletBalance();
+      loadTransactions();
+      alert('Withdrawal successful! Check your M-Pesa.');
+    } catch (error) {
+      alert('Failed to withdraw. Please try again.');
+    }
+    
+    setIsLoading(false);
+  };
+
+  const handleTransfer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      await apiService.transferToWallet(parseFloat(transferForm.amount), transferForm.walletId);
+      setTransferForm({ amount: '', walletId: '' });
+      setShowTransferForm(false);
+      loadWalletBalance();
+      loadTransactions();
+      alert('Transfer successful!');
+    } catch (error) {
+      alert('Failed to transfer. Please try again.');
     }
     
     setIsLoading(false);
@@ -166,6 +241,15 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
+            {/* Wallet Card */}
+            <WalletCard
+              xlmBalance={walletBalance.xlm_balance}
+              kesEquivalent={walletBalance.kes_equivalent}
+              walletId={walletBalance.wallet_id}
+              onDeposit={() => setShowDepositForm(true)}
+              onWithdraw={() => setShowWithdrawForm(true)}
+              onTransfer={() => setShowTransferForm(true)}
+            />
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card className="text-center">
@@ -173,7 +257,7 @@ const Dashboard: React.FC = () => {
                   <DollarSign className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="text-2xl font-bold text-secondary mb-1">
-                  ${(totalSent / 120).toFixed(0)}
+                  {walletBalance.xlm_balance.toFixed(2)} XLM
                 </div>
                 <div className="text-sm text-gray-600">Total Sent</div>
               </Card>
@@ -297,6 +381,152 @@ const Dashboard: React.FC = () => {
                   <Button type="submit" className="w-full" isLoading={isLoading}>
                     <Send className="mr-2 h-4 w-4" />
                     {isLoading ? 'Processing...' : 'Send Money'}
+                  </Button>
+                </form>
+              </Card>
+            )}
+
+            {/* Deposit Form */}
+            {showDepositForm && (
+              <Card>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-secondary flex items-center">
+                    <ArrowDownLeft className="mr-2 h-5 w-5" />
+                    Deposit from M-Pesa
+                  </h2>
+                  <Button variant="outline" onClick={() => setShowDepositForm(false)}>
+                    Cancel
+                  </Button>
+                </div>
+                
+                <form onSubmit={handleDeposit} className="space-y-6">
+                  <FormInput
+                    label="Amount (KES)"
+                    type="number"
+                    value={depositForm.amount}
+                    onChange={(e) => setDepositForm(prev => ({ ...prev, amount: e.target.value }))}
+                    required
+                    placeholder="1000"
+                    helper="Will be converted to XLM automatically"
+                  />
+                  
+                  <FormInput
+                    label="M-Pesa Reference"
+                    type="text"
+                    value={depositForm.mpesaRef}
+                    onChange={(e) => setDepositForm(prev => ({ ...prev, mpesaRef: e.target.value }))}
+                    required
+                    placeholder="QH7X8Y9Z"
+                    helper="M-Pesa transaction code"
+                  />
+                  
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-sm text-gray-600 mb-2">
+                      Exchange Rate: 1 XLM = 120 KES
+                    </div>
+                    <div className="text-sm font-medium">
+                      You will receive: {depositForm.amount ? (parseFloat(depositForm.amount) / 120).toFixed(4) : '0'} XLM
+                    </div>
+                  </div>
+                  
+                  <Button type="submit" className="w-full" isLoading={isLoading}>
+                    <Smartphone className="mr-2 h-4 w-4" />
+                    Deposit to Wallet
+                  </Button>
+                </form>
+              </Card>
+            )}
+
+            {/* Withdraw Form */}
+            {showWithdrawForm && (
+              <Card>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-secondary flex items-center">
+                    <ArrowUpRight className="mr-2 h-5 w-5" />
+                    Withdraw to M-Pesa
+                  </h2>
+                  <Button variant="outline" onClick={() => setShowWithdrawForm(false)}>
+                    Cancel
+                  </Button>
+                </div>
+                
+                <form onSubmit={handleWithdraw} className="space-y-6">
+                  <FormInput
+                    label="Amount (XLM)"
+                    type="number"
+                    step="0.0001"
+                    value={withdrawForm.amount}
+                    onChange={(e) => setWithdrawForm(prev => ({ ...prev, amount: e.target.value }))}
+                    required
+                    placeholder="10.0000"
+                    helper={`Available: ${walletBalance.xlm_balance.toFixed(4)} XLM`}
+                  />
+                  
+                  <FormInput
+                    label="M-Pesa Number"
+                    type="tel"
+                    value={withdrawForm.mpesaNumber}
+                    onChange={(e) => setWithdrawForm(prev => ({ ...prev, mpesaNumber: e.target.value }))}
+                    required
+                    placeholder="+254712345678"
+                    helper="Include country code"
+                  />
+                  
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-sm text-gray-600 mb-2">
+                      Exchange Rate: 1 XLM = 120 KES
+                    </div>
+                    <div className="text-sm font-medium">
+                      You will receive: KES {withdrawForm.amount ? (parseFloat(withdrawForm.amount) * 120).toFixed(2) : '0'}
+                    </div>
+                  </div>
+                  
+                  <Button type="submit" className="w-full" isLoading={isLoading}>
+                    <Smartphone className="mr-2 h-4 w-4" />
+                    Withdraw to M-Pesa
+                  </Button>
+                </form>
+              </Card>
+            )}
+
+            {/* Transfer Form */}
+            {showTransferForm && (
+              <Card>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-secondary flex items-center">
+                    <Send className="mr-2 h-5 w-5" />
+                    Transfer to Wallet
+                  </h2>
+                  <Button variant="outline" onClick={() => setShowTransferForm(false)}>
+                    Cancel
+                  </Button>
+                </div>
+                
+                <form onSubmit={handleTransfer} className="space-y-6">
+                  <FormInput
+                    label="Amount (XLM)"
+                    type="number"
+                    step="0.0001"
+                    value={transferForm.amount}
+                    onChange={(e) => setTransferForm(prev => ({ ...prev, amount: e.target.value }))}
+                    required
+                    placeholder="5.0000"
+                    helper={`Available: ${walletBalance.xlm_balance.toFixed(4)} XLM`}
+                  />
+                  
+                  <FormInput
+                    label="Recipient Wallet ID"
+                    type="text"
+                    value={transferForm.walletId}
+                    onChange={(e) => setTransferForm(prev => ({ ...prev, walletId: e.target.value }))}
+                    required
+                    placeholder="GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                    helper="Stellar public key of recipient"
+                  />
+                  
+                  <Button type="submit" className="w-full" isLoading={isLoading}>
+                    <Send className="mr-2 h-4 w-4" />
+                    Transfer XLM
                   </Button>
                 </form>
               </Card>
