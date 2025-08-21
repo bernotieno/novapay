@@ -18,7 +18,7 @@ pub struct Transaction {
 
 #[derive(Debug, Deserialize, Validate)]
 pub struct CreateTransaction {
-    #[validate(email)]
+    #[validate(length(min = 1))]
     pub recipient_email: String,
     #[validate(range(min = 0.01))]
     pub amount: f64,
