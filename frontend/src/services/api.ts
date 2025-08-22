@@ -4,7 +4,12 @@ interface User {
   id: string;
   email: string;
   full_name: string;
+  name?: string;
+  phone_number?: string;
+  phone?: string;
   stellar_public_key?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface LoginResponse {
@@ -57,6 +62,29 @@ class ApiService {
     });
     
     if (!response.ok) throw new Error('Failed to get user');
+    return response.json();
+  }
+
+  async getUserProfile(): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/user/profile`, {
+      headers: this.getAuthHeaders()
+    });
+    
+    if (!response.ok) throw new Error('Failed to get user profile');
+    return response.json();
+  }
+
+  async updateUserProfile(profileData: Partial<User>): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/user/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
+      },
+      body: JSON.stringify(profileData)
+    });
+    
+    if (!response.ok) throw new Error('Failed to update profile');
     return response.json();
   }
 

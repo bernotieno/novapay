@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, UserPlus, Check } from 'lucide-react';
+import { Eye, EyeOff, UserPlus } from 'lucide-react';
 import Button from '../components/Button';
 import FormInput from '../components/FormInput';
 import AuthLayout from '../layouts/AuthLayout';
@@ -81,12 +81,7 @@ const Register: React.FC = () => {
     }
   };
 
-  const benefits = [
-    'Send money in seconds, not days',
-    'Save up to 90% on transfer fees',
-    'Bank-level security and encryption',
-    '24/7 customer support',
-  ];
+
 
   return (
     <AuthLayout 
@@ -205,35 +200,20 @@ const Register: React.FC = () => {
           Create Account
         </Button>
 
-        <div className="text-center">
+        <div className="text-center space-y-3">
           <p className="text-sm text-gray-600">
             Already have an account?{' '}
             <Link to="/login" className="font-medium text-primary hover:text-primary/80">
               Sign in here
             </Link>
           </p>
+          <p className="text-sm text-gray-500">
+            <Link to="/" className="hover:text-primary transition-colors duration-200">
+              ← Back to Home
+            </Link>
+          </p>
         </div>
       </form>
-
-      <div className="mt-6">
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Why choose NovaPay?</span>
-          </div>
-        </div>
-
-        <div className="mt-4 space-y-2">
-          {benefits.map((benefit, index) => (
-            <div key={index} className="flex items-center text-sm text-gray-600">
-              <Check className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-              {benefit}
-            </div>
-          ))}
-        </div>
-      </div>
     </AuthLayout>
   );
 };

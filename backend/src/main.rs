@@ -35,6 +35,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Protected routes
     let protected_routes = Router::new()
         .route("/auth/me", get(handlers::me))
+        .route("/user/profile", get(handlers::get_profile))
+        .route("/user/profile", post(handlers::update_profile).put(handlers::update_profile))
         .route("/transactions/send", post(handlers::send_money))
         .route("/transactions/history", get(handlers::get_transaction_history))
         .route("/stellar/fund-test-account", post(handlers::fund_test_account))
