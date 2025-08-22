@@ -22,6 +22,7 @@ pub struct CreateUser {
     pub password: String,
     #[validate(length(min = 2))]
     pub full_name: String,
+    pub phone_number: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Validate)]

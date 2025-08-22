@@ -27,14 +27,15 @@ pub async fn register(
 
     let result = sqlx::query(
         r#"
-        INSERT INTO users (id, email, password_hash, full_name, stellar_public_key)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO users (id, email, password_hash, full_name, phone_number, stellar_public_key)
+        VALUES (?, ?, ?, ?, ?, ?)
         "#,
     )
     .bind(&user_id)
     .bind(&payload.email)
     .bind(&password_hash)
     .bind(&payload.full_name)
+    .bind(&payload.phone_number)
     .bind(&stellar_account.public_key)
     .execute(&pool)
     .await;
@@ -65,6 +66,7 @@ pub async fn register(
                     "id": user_id,
                     "email": payload.email,
                     "full_name": payload.full_name,
+                    "phone_number": payload.phone_number,
                     "stellar_public_key": stellar_account.public_key
                 }
             })))
