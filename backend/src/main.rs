@@ -26,6 +26,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Run migrations
     sqlx::migrate!("./migrations").run(&pool).await?;
+    
+    // Initialize wallet balances for existing wallets
+    sqlx::query("UPDATE wallets SET balance = 1000.0 WHERE balance = 0.0 OR balance IS NULL")
+        .execute(&pool)
+        .await?;
 
     // Protected routes
     let protected_routes = Router::new()
@@ -57,7 +62,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let port = env::var("PORT").unwrap_or_else(|_| "3000".to_string());
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
     
-    println!("🚀 NovaPay Backend running on port {}", port);
+    println!("🚀 NovaPay Backend running on port {} with wallet balances initialized", port);
     axum::serve(listener, app).await?;
 
     Ok(())
