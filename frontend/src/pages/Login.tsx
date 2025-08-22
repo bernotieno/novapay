@@ -105,35 +105,20 @@ const Login: React.FC = () => {
           Sign In
         </Button>
 
-        <div className="text-center">
+        <div className="text-center space-y-3">
           <p className="text-sm text-gray-600">
             Don't have an account?{' '}
             <Link to="/register" className="font-medium text-primary hover:text-primary/80">
               Sign up here
             </Link>
           </p>
+          <p className="text-sm text-gray-500">
+            <Link to="/" className="hover:text-primary transition-colors duration-200">
+              ← Back to Home
+            </Link>
+          </p>
         </div>
       </form>
-
-      <div className="mt-6">
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Demo Account</span>
-          </div>
-        </div>
-
-        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-600 mb-2">
-            For demo purposes, you can use any email and password to sign in.
-          </p>
-          <p className="text-xs text-gray-500">
-            Try: demo@stellarpay.com / password123
-          </p>
-        </div>
-      </div>
     </AuthLayout>
   );
 };

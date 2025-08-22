@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, Facebook, Twitter, Linkedin, Mail } from 'lucide-react';
+import { Facebook, Twitter, Linkedin, Mail } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
@@ -10,9 +10,6 @@ const Footer: React.FC = () => {
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <Link to="/" className="flex items-center space-x-2 mb-4">
-              <div className="bg-primary p-2 rounded-lg">
-                <Zap className="h-6 w-6 text-secondary" />
-              </div>
               <span className="text-xl font-bold">NovaPay</span>
             </Link>
             <p className="text-gray-400 max-w-md">
