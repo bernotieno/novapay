@@ -2,6 +2,8 @@ mod handlers;
 mod middleware;
 mod models;
 mod services;
+mod wallet_sdk;
+mod wallet_sdk_service;
 
 use axum::{
     middleware::from_fn,
@@ -36,6 +38,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/wallet/deposit", post(handlers::deposit_from_mpesa))
         .route("/wallet/withdraw", post(handlers::withdraw_to_mpesa))
         .route("/wallet/transfer", post(handlers::transfer_to_wallet))
+        .route("/sdk/wallet/create", post(handlers::create_wallet_sdk))
+        .route("/sdk/wallet/balance", post(handlers::get_wallet_balance_sdk))
+        .route("/sdk/wallet/send", post(handlers::send_payment_sdk))
+        .route("/sdk/wallet/fund-testnet", post(handlers::fund_testnet_sdk))
+        .route("/sdk/wallet/trustline", post(handlers::create_trustline_sdk))
         .layer(from_fn(middleware::auth_middleware));
 
     let app = Router::new()
