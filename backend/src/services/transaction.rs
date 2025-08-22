@@ -1,16 +1,18 @@
 use crate::models::{Transaction, CreateTransaction};
-use crate::services::StellarService;
+use crate::services::{StellarService, SmsService};
 use sqlx::SqlitePool;
 use uuid::Uuid;
 
 pub struct TransactionService {
     stellar_service: StellarService,
+    sms_service: SmsService,
 }
 
 impl TransactionService {
     pub fn new() -> Self {
         Self {
             stellar_service: StellarService::new(),
+            sms_service: SmsService::new(),
         }
     }
 
@@ -74,6 +76,16 @@ impl TransactionService {
         .bind(transaction_id)
         .execute(pool)
         .await?;
+
+        // Send SMS notification to recipient
+        if let Err(e) = self.sms_service.send_notification(
+            &transaction.recipient_email, // This is actually phone number
+            transaction.amount,
+            &transaction.target_currency,
+            "NovaPay User"
+        ).await {
+            println!("Failed to send SMS: {}", e);
+        }
 
         Ok(tx_hash)
     }

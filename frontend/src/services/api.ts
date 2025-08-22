@@ -101,6 +101,57 @@ class ApiService {
     if (!response.ok) throw new Error('Failed to get balance');
     return response.json();
   }
+
+  async getWalletBalance() {
+    const response = await fetch(`${API_BASE_URL}/wallet/balance`, {
+      headers: this.getAuthHeaders()
+    });
+    
+    if (!response.ok) throw new Error('Failed to get wallet balance');
+    return response.json();
+  }
+
+  async depositFromMpesa(kesAmount: number, mpesaRef: string) {
+    const response = await fetch(`${API_BASE_URL}/wallet/deposit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
+      },
+      body: JSON.stringify({ kes_amount: kesAmount, mpesa_ref: mpesaRef })
+    });
+    
+    if (!response.ok) throw new Error('Failed to deposit');
+    return response.json();
+  }
+
+  async withdrawToMpesa(xlmAmount: number, mpesaNumber: string) {
+    const response = await fetch(`${API_BASE_URL}/wallet/withdraw`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
+      },
+      body: JSON.stringify({ xlm_amount: xlmAmount, mpesa_number: mpesaNumber })
+    });
+    
+    if (!response.ok) throw new Error('Failed to withdraw');
+    return response.json();
+  }
+
+  async transferToWallet(xlmAmount: number, toWalletId: string) {
+    const response = await fetch(`${API_BASE_URL}/wallet/transfer`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
+      },
+      body: JSON.stringify({ xlm_amount: xlmAmount, to_wallet_id: toWalletId })
+    });
+    
+    if (!response.ok) throw new Error('Failed to transfer');
+    return response.json();
+  }
 }
 
 export const apiService = new ApiService();
