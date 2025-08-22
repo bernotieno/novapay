@@ -1,16 +1,27 @@
 use crate::models::Wallet;
-use crate::services::StellarService;
+use crate::services::{StellarService, stellar_sdk::StellarSDK};
 use sqlx::SqlitePool;
 use uuid::Uuid;
+use std::collections::HashMap;
 
 pub struct WalletService {
     stellar_service: StellarService,
+    stellar_sdk: StellarSDK,
+    // In-memory balance tracking for demo
+    balances: HashMap<String, f64>,
 }
 
 impl WalletService {
     pub fn new() -> Self {
+        let mut balances = HashMap::new();
+        // Initialize with some demo balances
+        balances.insert("demo_wallet_1".to_string(), 1000.0);
+        balances.insert("demo_wallet_2".to_string(), 500.0);
+        
         Self {
             stellar_service: StellarService::new(),
+            stellar_sdk: StellarSDK::new(),
+            balances,
         }
     }
 
@@ -21,12 +32,8 @@ impl WalletService {
             .await?;
 
         if let Some(wallet) = wallet {
-            let balances = self.stellar_service.get_account_balance(&wallet.stellar_public_key).await?;
-            let xlm_balance = balances.iter()
-                .find(|b| b.asset_type == "native")
-                .map(|b| b.balance.parse::<f64>().unwrap_or(0.0))
-                .unwrap_or(0.0);
-            Ok(xlm_balance)
+            // Return balance from database (which tracks our simulated transactions)
+            Ok(wallet.balance)
         } else {
             Ok(0.0)
         }
@@ -103,8 +110,21 @@ impl WalletService {
             .fetch_one(pool)
             .await?;
 
-        // Send XLM to recipient wallet using Stellar SDK
-        let tx_hash = self.stellar_service.send_payment(&from_wallet.stellar_secret_key, to_wallet_id, xlm_amount, "XLM").await?;
+        // Check if sender has sufficient balance
+        let current_balance = self.get_wallet_balance(pool, from_user_id).await?;
+        if current_balance < xlm_amount {
+            return Err("Insufficient balance".into());
+        }
+
+        // Send XLM using Stellar SDK
+        let tx_hash = self.stellar_sdk.send_xlm_payment(
+            &from_wallet.stellar_secret_key, 
+            to_wallet_id, 
+            xlm_amount
+        ).await?;
+        
+        // Update balances in database (simulate balance changes)
+        self.update_balance_after_transfer(pool, from_user_id, to_wallet_id, xlm_amount).await?;
         
         // Record transfer transaction
         let transfer_id = Uuid::new_v4().to_string();
@@ -122,8 +142,42 @@ impl WalletService {
         .execute(pool)
         .await?;
 
-        println!("🔄 Transfer: {} XLM from {} to {}", xlm_amount, from_user_id, to_wallet_id);
+        println!("🔄 Transfer: {} XLM from {} to {} (Hash: {})", xlm_amount, from_user_id, to_wallet_id, tx_hash);
         Ok(tx_hash)
+    }
+    
+    async fn update_balance_after_transfer(&self, pool: &SqlitePool, from_user_id: &str, to_wallet_id: &str, amount: f64) -> Result<(), Box<dyn std::error::Error>> {
+        // Update sender's balance (decrease)
+        let sender_balance = self.get_wallet_balance(pool, from_user_id).await?;
+        let new_sender_balance = sender_balance - amount;
+        
+        sqlx::query("UPDATE wallets SET balance = ? WHERE user_id = ?")
+            .bind(new_sender_balance)
+            .bind(from_user_id)
+            .execute(pool)
+            .await?;
+            
+        // Find recipient by wallet ID and update their balance (increase)
+        if let Some(recipient) = sqlx::query_as::<_, Wallet>("SELECT * FROM wallets WHERE stellar_public_key = ?")
+            .bind(to_wallet_id)
+            .fetch_optional(pool)
+            .await? {
+            
+            let recipient_balance = recipient.balance;
+            let new_recipient_balance = recipient_balance + amount;
+            
+            sqlx::query("UPDATE wallets SET balance = ? WHERE user_id = ?")
+                .bind(new_recipient_balance)
+                .bind(&recipient.user_id)
+                .execute(pool)
+                .await?;
+                
+            println!("💰 Transfer complete:");
+            println!("   Sender {}: {} XLM → {} XLM", from_user_id, sender_balance, new_sender_balance);
+            println!("   Recipient {}: {} XLM → {} XLM", recipient.user_id, recipient_balance, new_recipient_balance);
+        }
+        
+        Ok(())
     }
 
     pub fn convert_xlm_to_kes(&self, xlm_amount: f64) -> f64 {
