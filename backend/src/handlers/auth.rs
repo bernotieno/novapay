@@ -102,6 +102,7 @@ pub async fn login(
                         id: user.id,
                         email: user.email,
                         full_name: user.full_name,
+                        phone_number: user.phone_number,
                         stellar_public_key: user.stellar_public_key,
                     }
                 })))
@@ -128,6 +129,7 @@ pub async fn me(
             id: user.id,
             email: user.email,
             full_name: user.full_name,
+            phone_number: user.phone_number,
             stellar_public_key: user.stellar_public_key,
         })),
         None => Err(StatusCode::NOT_FOUND),

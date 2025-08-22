@@ -1,24 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Send, 
-  Clock, 
-  CheckCircle, 
-  AlertCircle, 
-  Plus,
-  User,
-  LogOut,
-  CreditCard,
-  Activity,
   DollarSign,
+  Activity,
+  CreditCard,
   Smartphone,
   ArrowUpRight,
-  ArrowDownLeft
+  ArrowDownLeft,
+  Send
 } from 'lucide-react';
 import Button from '../components/Button';
 import FormInput from '../components/FormInput';
 import Card from '../components/Card';
 import WalletCard from '../components/WalletCard';
+import Sidebar from '../components/Sidebar';
+import ProfileHeader from '../components/ProfileHeader';
+import ProfileSection from '../components/ProfileSection';
+import SendMoneyForm from '../components/SendMoneyForm';
+import TransactionList from '../components/TransactionList';
 import { apiService, type Transaction as ApiTransaction } from '../services/api';
 
 interface Transaction {
@@ -35,6 +34,7 @@ const Dashboard: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [walletBalance, setWalletBalance] = useState({ xlm_balance: 0, kes_equivalent: 0, wallet_id: '' });
+  const [activeTab, setActiveTab] = useState('overview');
   const [showSendForm, setShowSendForm] = useState(false);
   const [showDepositForm, setShowDepositForm] = useState(false);
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
@@ -63,7 +63,8 @@ const Dashboard: React.FC = () => {
       setUser(JSON.parse(userData));
     }
     
-    // Load transaction history and wallet balance
+    // Load user profile, transaction history and wallet balance
+    loadUserProfile();
     loadTransactions();
     loadWalletBalance();
   }, [navigate]);
@@ -95,6 +96,16 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const loadUserProfile = async () => {
+    try {
+      const profile = await apiService.getUserProfile();
+      setUser(profile);
+      localStorage.setItem('user', JSON.stringify(profile));
+    } catch (error) {
+      console.error('Failed to load user profile:', error);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('novapay_token');
@@ -115,13 +126,25 @@ const Dashboard: React.FC = () => {
       
       setSendForm({ amount: '', recipient: '', recipientName: '', currency: 'KES' });
       setShowSendForm(false);
-      loadTransactions(); // Reload transactions
+      loadTransactions();
+      // TODO: Replace with toast notification
       alert('Money sent successfully! Your recipient will receive an SMS confirmation.');
     } catch (error) {
       alert('Failed to send money. Please try again.');
     }
     
     setIsLoading(false);
+  };
+
+  const handleUpdateProfile = async (profileData: any) => {
+    try {
+      const updatedProfile = await apiService.updateUserProfile(profileData);
+      setUser(updatedProfile);
+      localStorage.setItem('user', JSON.stringify(updatedProfile));
+      alert('Profile updated successfully!');
+    } catch (error) {
+      alert('Failed to update profile. Please try again.');
+    }
   };
 
   const handleDeposit = async (e: React.FormEvent) => {
@@ -178,70 +201,32 @@ const Dashboard: React.FC = () => {
     setIsLoading(false);
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'pending':
-        return <Clock className="h-5 w-5 text-yellow-500" />;
-      case 'failed':
-        return <AlertCircle className="h-5 w-5 text-red-500" />;
-      default:
-        return <Clock className="h-5 w-5 text-gray-500" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'text-green-500';
-      case 'pending':
-        return 'text-yellow-500';
-      case 'failed':
-        return 'text-red-500';
-      default:
-        return 'text-gray-500';
-    }
-  };
-
-  const totalSent = transactions
-    .filter(t => t.status === 'completed')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  if (!user) {
-    return <div>Loading...</div>;
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <div className="bg-primary p-2 rounded-lg">
-                <User className="h-6 w-6 text-secondary" />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold text-secondary">
-                  Welcome back, {user.name}!
-                </h1>
-                <p className="text-sm text-gray-600">{user.email}</p>
-              </div>
-            </div>
-            <Button variant="outline" onClick={handleLogout} className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white">
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Wallet Card */}
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'profile':
+        return (
+          <ProfileSection
+            user={user}
+            walletBalance={walletBalance}
+            onUpdateProfile={handleUpdateProfile}
+          />
+        );
+      case 'send':
+        return (
+          <SendMoneyForm
+            showForm={showSendForm}
+            onToggleForm={() => setShowSendForm(!showSendForm)}
+            formData={sendForm}
+            onFormChange={setSendForm}
+            onSubmit={handleSendMoney}
+            isLoading={isLoading}
+          />
+        );
+      case 'transactions':
+        return <TransactionList transactions={transactions} showAll />;
+      case 'wallet':
+        return (
+          <div className="space-y-6">
             <WalletCard
               xlmBalance={walletBalance.xlm_balance}
               kesEquivalent={walletBalance.kes_equivalent}
@@ -250,367 +235,297 @@ const Dashboard: React.FC = () => {
               onWithdraw={() => setShowWithdrawForm(true)}
               onTransfer={() => setShowTransferForm(true)}
             />
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="text-center">
-                <div className="bg-green-100 p-3 rounded-full w-12 h-12 mx-auto mb-3 flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-green-600" />
-                </div>
-                <div className="text-2xl font-bold text-secondary mb-1">
-                  {walletBalance.xlm_balance.toFixed(2)} XLM
-                </div>
-                <div className="text-sm text-gray-600">Total Sent</div>
-              </Card>
-              
-              <Card className="text-center">
-                <div className="bg-blue-100 p-3 rounded-full w-12 h-12 mx-auto mb-3 flex items-center justify-center">
-                  <Activity className="h-6 w-6 text-blue-600" />
-                </div>
-                <div className="text-2xl font-bold text-secondary mb-1">
-                  {transactions.length}
-                </div>
-                <div className="text-sm text-gray-600">Transactions</div>
-              </Card>
-              
-              <Card className="text-center">
-                <div className="bg-primary/10 p-3 rounded-full w-12 h-12 mx-auto mb-3 flex items-center justify-center">
-                  <CreditCard className="h-6 w-6 text-primary" />
-                </div>
-                <div className="text-2xl font-bold text-secondary mb-1">
-                  ${(transactions.length * 0.5).toFixed(2)}
-                </div>
-                <div className="text-sm text-gray-600">Fees Saved</div>
-              </Card>
-            </div>
-
-            {/* Send Money Section */}
-            {!showSendForm ? (
-              <Card>
-                <div className="text-center py-8">
-                  <div className="bg-primary/10 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                    <Send className="h-8 w-8 text-primary" />
-                  </div>
-                  <h2 className="text-xl font-bold text-secondary mb-2">Send Money</h2>
-                  <p className="text-gray-600 mb-6">
-                    Send money to your loved ones across East Africa instantly
-                  </p>
-                  <Button onClick={() => setShowSendForm(true)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Start New Transfer
-                  </Button>
-                </div>
-              </Card>
-            ) : (
-              <Card>
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-secondary">Send Money</h2>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setShowSendForm(false)}
-                    className="text-gray-600"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-                
-                <form onSubmit={handleSendMoney} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormInput
-                      label="Amount"
-                      type="number"
-                      value={sendForm.amount}
-                      onChange={(e) => setSendForm(prev => ({ ...prev, amount: e.target.value }))}
-                      required
-                      placeholder="100"
-                      helper="Minimum: $1"
-                    />
-                    
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Currency
-                      </label>
-                      <select
-                        value={sendForm.currency}
-                        onChange={(e) => setSendForm(prev => ({ ...prev, currency: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                      >
-                        <option value="KES">KES - Kenyan Shilling</option>
-                        <option value="UGX">UGX - Ugandan Shilling</option>
-                        <option value="TZS">TZS - Tanzanian Shilling</option>
-                        <option value="RWF">RWF - Rwandan Franc</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <FormInput
-                    label="Recipient Phone Number"
-                    type="tel"
-                    value={sendForm.recipient}
-                    onChange={(e) => setSendForm(prev => ({ ...prev, recipient: e.target.value }))}
-                    required
-                    placeholder="+254712345678"
-                    helper="Include country code"
-                  />
-                  
-                  <FormInput
-                    label="Recipient Name (Optional)"
-                    type="text"
-                    value={sendForm.recipientName}
-                    onChange={(e) => setSendForm(prev => ({ ...prev, recipientName: e.target.value }))}
-                    placeholder="John Doe"
-                    helper="This helps identify the recipient"
-                  />
-                  
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex justify-between text-sm mb-2">
-                      <span>You send:</span>
-                      <span className="font-medium">
-                        ${sendForm.amount || '0'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span>Our fee:</span>
-                      <span className="font-medium text-green-600">$0.50</span>
-                    </div>
-                    <div className="flex justify-between text-sm font-medium border-t pt-2">
-                      <span>Total:</span>
-                      <span>${(parseFloat(sendForm.amount || '0') + 0.5).toFixed(2)}</span>
-                    </div>
-                  </div>
-                  
-                  <Button type="submit" className="w-full" isLoading={isLoading}>
-                    <Send className="mr-2 h-4 w-4" />
-                    {isLoading ? 'Processing...' : 'Send Money'}
-                  </Button>
-                </form>
-              </Card>
-            )}
-
-            {/* Deposit Form */}
-            {showDepositForm && (
-              <Card>
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-secondary flex items-center">
-                    <ArrowDownLeft className="mr-2 h-5 w-5" />
-                    Deposit from M-Pesa
-                  </h2>
-                  <Button variant="outline" onClick={() => setShowDepositForm(false)}>
-                    Cancel
-                  </Button>
-                </div>
-                
-                <form onSubmit={handleDeposit} className="space-y-6">
-                  <FormInput
-                    label="Amount (KES)"
-                    type="number"
-                    value={depositForm.amount}
-                    onChange={(e) => setDepositForm(prev => ({ ...prev, amount: e.target.value }))}
-                    required
-                    placeholder="1000"
-                    helper="Will be converted to XLM automatically"
-                  />
-                  
-                  <FormInput
-                    label="M-Pesa Reference"
-                    type="text"
-                    value={depositForm.mpesaRef}
-                    onChange={(e) => setDepositForm(prev => ({ ...prev, mpesaRef: e.target.value }))}
-                    required
-                    placeholder="QH7X8Y9Z"
-                    helper="M-Pesa transaction code"
-                  />
-                  
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-sm text-gray-600 mb-2">
-                      Exchange Rate: 1 XLM = 120 KES
-                    </div>
-                    <div className="text-sm font-medium">
-                      You will receive: {depositForm.amount ? (parseFloat(depositForm.amount) / 120).toFixed(4) : '0'} XLM
-                    </div>
-                  </div>
-                  
-                  <Button type="submit" className="w-full" isLoading={isLoading}>
-                    <Smartphone className="mr-2 h-4 w-4" />
-                    Deposit to Wallet
-                  </Button>
-                </form>
-              </Card>
-            )}
-
-            {/* Withdraw Form */}
-            {showWithdrawForm && (
-              <Card>
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-secondary flex items-center">
-                    <ArrowUpRight className="mr-2 h-5 w-5" />
-                    Withdraw to M-Pesa
-                  </h2>
-                  <Button variant="outline" onClick={() => setShowWithdrawForm(false)}>
-                    Cancel
-                  </Button>
-                </div>
-                
-                <form onSubmit={handleWithdraw} className="space-y-6">
-                  <FormInput
-                    label="Amount (XLM)"
-                    type="number"
-                    step="0.0001"
-                    value={withdrawForm.amount}
-                    onChange={(e) => setWithdrawForm(prev => ({ ...prev, amount: e.target.value }))}
-                    required
-                    placeholder="10.0000"
-                    helper={`Available: ${walletBalance.xlm_balance.toFixed(4)} XLM`}
-                  />
-                  
-                  <FormInput
-                    label="M-Pesa Number"
-                    type="tel"
-                    value={withdrawForm.mpesaNumber}
-                    onChange={(e) => setWithdrawForm(prev => ({ ...prev, mpesaNumber: e.target.value }))}
-                    required
-                    placeholder="+254712345678"
-                    helper="Include country code"
-                  />
-                  
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-sm text-gray-600 mb-2">
-                      Exchange Rate: 1 XLM = 120 KES
-                    </div>
-                    <div className="text-sm font-medium">
-                      You will receive: KES {withdrawForm.amount ? (parseFloat(withdrawForm.amount) * 120).toFixed(2) : '0'}
-                    </div>
-                  </div>
-                  
-                  <Button type="submit" className="w-full" isLoading={isLoading}>
-                    <Smartphone className="mr-2 h-4 w-4" />
-                    Withdraw to M-Pesa
-                  </Button>
-                </form>
-              </Card>
-            )}
-
-            {/* Transfer Form */}
-            {showTransferForm && (
-              <Card>
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-secondary flex items-center">
-                    <Send className="mr-2 h-5 w-5" />
-                    Transfer to Wallet
-                  </h2>
-                  <Button variant="outline" onClick={() => setShowTransferForm(false)}>
-                    Cancel
-                  </Button>
-                </div>
-                
-                <form onSubmit={handleTransfer} className="space-y-6">
-                  <FormInput
-                    label="Amount (XLM)"
-                    type="number"
-                    step="0.0001"
-                    value={transferForm.amount}
-                    onChange={(e) => setTransferForm(prev => ({ ...prev, amount: e.target.value }))}
-                    required
-                    placeholder="5.0000"
-                    helper={`Available: ${walletBalance.xlm_balance.toFixed(4)} XLM`}
-                  />
-                  
-                  <FormInput
-                    label="Recipient Wallet ID"
-                    type="text"
-                    value={transferForm.walletId}
-                    onChange={(e) => setTransferForm(prev => ({ ...prev, walletId: e.target.value }))}
-                    required
-                    placeholder="GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                    helper="Stellar public key of recipient"
-                  />
-                  
-                  <Button type="submit" className="w-full" isLoading={isLoading}>
-                    <Send className="mr-2 h-4 w-4" />
-                    Transfer XLM
-                  </Button>
-                </form>
-              </Card>
-            )}
+            {renderWalletForms()}
           </div>
+        );
+      default:
+        return renderOverview();
+    }
+  };
 
-          {/* Sidebar */}
-          <div className="space-y-8">
-            {/* Recent Transactions */}
-            <Card>
-              <h3 className="text-lg font-semibold text-secondary mb-4">
-                Recent Transactions
-              </h3>
-              
-              {transactions.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="bg-gray-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                    <Activity className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <p className="text-gray-600">No transactions yet</p>
-                  <p className="text-sm text-gray-500">Start by sending your first transfer</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {transactions.slice(0, 5).map((transaction) => (
-                    <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        {getStatusIcon(transaction.status)}
-                        <div>
-                          <div className="text-sm font-medium text-secondary">
-                            {transaction.recipient}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {new Date(transaction.date).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium text-secondary">
-                          {transaction.amount} {transaction.currency}
-                        </div>
-                        <div className={`text-xs capitalize ${getStatusColor(transaction.status)}`}>
-                          {transaction.status}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
+  const renderOverview = () => (
+    <div className="space-y-6">
+      <WalletCard
+        xlmBalance={walletBalance.xlm_balance}
+        kesEquivalent={walletBalance.kes_equivalent}
+        walletId={walletBalance.wallet_id}
+        onDeposit={() => setShowDepositForm(true)}
+        onWithdraw={() => setShowWithdrawForm(true)}
+        onTransfer={() => setShowTransferForm(true)}
+      />
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="text-center">
+          <div className="bg-green-100 p-3 rounded-full w-12 h-12 mx-auto mb-3 flex items-center justify-center">
+            <DollarSign className="h-6 w-6 text-green-600" />
+          </div>
+          <div className="text-2xl font-bold text-secondary mb-1">
+            {walletBalance.xlm_balance.toFixed(2)} XLM
+          </div>
+          <div className="text-sm text-gray-600">Wallet Balance</div>
+        </Card>
+        
+        <Card className="text-center">
+          <div className="bg-blue-100 p-3 rounded-full w-12 h-12 mx-auto mb-3 flex items-center justify-center">
+            <Activity className="h-6 w-6 text-blue-600" />
+          </div>
+          <div className="text-2xl font-bold text-secondary mb-1">
+            {transactions.length}
+          </div>
+          <div className="text-sm text-gray-600">Transactions</div>
+        </Card>
+        
+        <Card className="text-center">
+          <div className="bg-primary/10 p-3 rounded-full w-12 h-12 mx-auto mb-3 flex items-center justify-center">
+            <CreditCard className="h-6 w-6 text-primary" />
+          </div>
+          <div className="text-2xl font-bold text-secondary mb-1">
+            ${(transactions.length * 0.5).toFixed(2)}
+          </div>
+          <div className="text-sm text-gray-600">Fees Saved</div>
+        </Card>
+      </div>
 
-            {/* Help & Support */}
-            <Card>
-              <h3 className="text-lg font-semibold text-secondary mb-4">
-                Need Help?
-              </h3>
-              <div className="space-y-3">
-                <a 
-                  href="/contact"
-                  className="block text-sm text-primary hover:text-primary/80 transition-colors duration-200"
-                >
-                  Contact Support
-                </a>
-                <a 
-                  href="#"
-                  className="block text-sm text-primary hover:text-primary/80 transition-colors duration-200"
-                >
-                  View FAQ
-                </a>
-                <a 
-                  href="#"
-                  className="block text-sm text-primary hover:text-primary/80 transition-colors duration-200"
-                >
-                  Track Transfer
-                </a>
-                <a 
-                  href="#"
-                  className="block text-sm text-primary hover:text-primary/80 transition-colors duration-200"
-                >
-                  Rate & Fees
-                </a>
+      <SendMoneyForm
+        showForm={showSendForm}
+        onToggleForm={() => setShowSendForm(!showSendForm)}
+        formData={sendForm}
+        onFormChange={setSendForm}
+        onSubmit={handleSendMoney}
+        isLoading={isLoading}
+      />
+    </div>
+  );
+
+  const renderWalletForms = () => (
+    <div className="space-y-6">
+      {showDepositForm && renderDepositForm()}
+      {showWithdrawForm && renderWithdrawForm()}
+      {showTransferForm && renderTransferForm()}
+    </div>
+  );
+
+  const renderDepositForm = () => (
+    <Card>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold text-secondary flex items-center">
+          <ArrowDownLeft className="mr-2 h-5 w-5" />
+          Deposit from M-Pesa
+        </h2>
+        <Button variant="outline" onClick={() => setShowDepositForm(false)}>
+          Cancel
+        </Button>
+      </div>
+      
+      <form onSubmit={handleDeposit} className="space-y-6">
+        <FormInput
+          label="Amount (KES)"
+          type="number"
+          value={depositForm.amount}
+          onChange={(e) => setDepositForm(prev => ({ ...prev, amount: e.target.value }))}
+          required
+          placeholder="1000"
+          helper="Will be converted to XLM automatically"
+        />
+        
+        <FormInput
+          label="M-Pesa Reference"
+          type="text"
+          value={depositForm.mpesaRef}
+          onChange={(e) => setDepositForm(prev => ({ ...prev, mpesaRef: e.target.value }))}
+          required
+          placeholder="QH7X8Y9Z"
+          helper="M-Pesa transaction code"
+        />
+        
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="text-sm text-gray-600 mb-2">
+            Exchange Rate: 1 XLM = 120 KES
+          </div>
+          <div className="text-sm font-medium">
+            You will receive: {depositForm.amount ? (parseFloat(depositForm.amount) / 120).toFixed(4) : '0'} XLM
+          </div>
+        </div>
+        
+        <Button type="submit" className="w-full" isLoading={isLoading}>
+          <Smartphone className="mr-2 h-4 w-4" />
+          Deposit to Wallet
+        </Button>
+      </form>
+    </Card>
+  );
+
+  const renderWithdrawForm = () => (
+    <Card>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold text-secondary flex items-center">
+          <ArrowUpRight className="mr-2 h-5 w-5" />
+          Withdraw to M-Pesa
+        </h2>
+        <Button variant="outline" onClick={() => setShowWithdrawForm(false)}>
+          Cancel
+        </Button>
+      </div>
+      
+      <form onSubmit={handleWithdraw} className="space-y-6">
+        <FormInput
+          label="Amount (XLM)"
+          type="number"
+          step="0.0001"
+          value={withdrawForm.amount}
+          onChange={(e) => setWithdrawForm(prev => ({ ...prev, amount: e.target.value }))}
+          required
+          placeholder="10.0000"
+          helper={`Available: ${walletBalance.xlm_balance.toFixed(4)} XLM`}
+        />
+        
+        <FormInput
+          label="M-Pesa Number"
+          type="tel"
+          value={withdrawForm.mpesaNumber}
+          onChange={(e) => setWithdrawForm(prev => ({ ...prev, mpesaNumber: e.target.value }))}
+          required
+          placeholder="+254712345678"
+          helper="Include country code"
+        />
+        
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="text-sm text-gray-600 mb-2">
+            Exchange Rate: 1 XLM = 120 KES
+          </div>
+          <div className="text-sm font-medium">
+            You will receive: KES {withdrawForm.amount ? (parseFloat(withdrawForm.amount) * 120).toFixed(2) : '0'}
+          </div>
+        </div>
+        
+        <Button type="submit" className="w-full" isLoading={isLoading}>
+          <Smartphone className="mr-2 h-4 w-4" />
+          Withdraw to M-Pesa
+        </Button>
+      </form>
+    </Card>
+  );
+
+  const renderTransferForm = () => (
+    <Card>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold text-secondary flex items-center">
+          <Send className="mr-2 h-5 w-5" />
+          Transfer to Wallet
+        </h2>
+        <Button variant="outline" onClick={() => setShowTransferForm(false)}>
+          Cancel
+        </Button>
+      </div>
+      
+      <form onSubmit={handleTransfer} className="space-y-6">
+        <FormInput
+          label="Amount (XLM)"
+          type="number"
+          step="0.0001"
+          value={transferForm.amount}
+          onChange={(e) => setTransferForm(prev => ({ ...prev, amount: e.target.value }))}
+          required
+          placeholder="5.0000"
+          helper={`Available: ${walletBalance.xlm_balance.toFixed(4)} XLM`}
+        />
+        
+        <FormInput
+          label="Recipient Wallet ID"
+          type="text"
+          value={transferForm.walletId}
+          onChange={(e) => setTransferForm(prev => ({ ...prev, walletId: e.target.value }))}
+          required
+          placeholder="GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+          helper="Stellar public key of recipient"
+        />
+        
+        <Button type="submit" className="w-full" isLoading={isLoading}>
+          <Send className="mr-2 h-4 w-4" />
+          Transfer XLM
+        </Button>
+      </form>
+    </Card>
+  );
+
+  if (!user) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      <Sidebar
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
+      
+      <div className="flex-1 flex flex-col lg:ml-0">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center space-x-4">
+                <h1 className="text-xl font-semibold text-secondary capitalize">
+                  {activeTab === 'overview' ? 'Dashboard' : activeTab}
+                </h1>
               </div>
-            </Card>
+              <ProfileHeader
+                user={user}
+                onLogout={handleLogout}
+                onProfileClick={() => setActiveTab('profile')}
+              />
+            </div>
           </div>
+        </header>
+
+        <div className="flex flex-1 overflow-hidden">
+          {/* Main Content */}
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto pb-20 lg:pb-8">
+            <div className="max-w-6xl mx-auto">
+              {renderContent()}
+            </div>
+          </main>
+          
+          {/* Right Sidebar - Only on overview */}
+          {activeTab === 'overview' && (
+            <aside className="hidden xl:block w-80 bg-white border-l border-gray-200 p-6 sticky top-16 h-screen overflow-y-auto">
+              <div className="space-y-6">
+                <TransactionList transactions={transactions} />
+                
+                <Card>
+                  <h3 className="text-lg font-semibold text-secondary mb-4">
+                    Need Help?
+                  </h3>
+                  <div className="space-y-3">
+                    <a 
+                      href="/contact"
+                      className="block text-sm text-primary hover:text-primary/80 transition-colors duration-200"
+                    >
+                      Contact Support
+                    </a>
+                    <a 
+                      href="#"
+                      className="block text-sm text-primary hover:text-primary/80 transition-colors duration-200"
+                    >
+                      View FAQ
+                    </a>
+                    <a 
+                      href="#"
+                      className="block text-sm text-primary hover:text-primary/80 transition-colors duration-200"
+                    >
+                      Track Transfer
+                    </a>
+                    <a 
+                      href="#"
+                      className="block text-sm text-primary hover:text-primary/80 transition-colors duration-200"
+                    >
+                      Rate & Fees
+                    </a>
+                  </div>
+                </Card>
+              </div>
+            </aside>
+          )}
         </div>
       </div>
     </div>

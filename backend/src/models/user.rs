@@ -8,6 +8,7 @@ pub struct User {
     pub email: String,
     pub password_hash: String,
     pub full_name: String,
+    pub phone_number: Option<String>,
     pub stellar_public_key: Option<String>,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
@@ -35,5 +36,13 @@ pub struct UserResponse {
     pub id: String,
     pub email: String,
     pub full_name: String,
+    pub phone_number: Option<String>,
     pub stellar_public_key: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct UpdateUserProfile {
+    #[validate(length(min = 2))]
+    pub full_name: Option<String>,
+    pub phone_number: Option<String>,
 }
