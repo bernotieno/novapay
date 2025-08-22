@@ -34,11 +34,11 @@ class ApiService {
     return token ? { 'Authorization': `Bearer ${token}` } : {};
   }
 
-  async register(email: string, password: string, full_name: string): Promise<LoginResponse> {
+  async register(email: string, password: string, full_name: string, phone_number?: string): Promise<LoginResponse> {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, full_name })
+      body: JSON.stringify({ email, password, full_name, phone_number })
     });
     
     if (!response.ok) throw new Error('Registration failed');

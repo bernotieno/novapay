@@ -10,6 +10,7 @@ const Register: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
     acceptTerms: false,
@@ -57,7 +58,7 @@ const Register: React.FC = () => {
     setIsLoading(true);
     
     try {
-      const response = await apiService.register(formData.email, formData.password, formData.name);
+      const response = await apiService.register(formData.email, formData.password, formData.name, formData.phone);
       localStorage.setItem('novapay_token', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));
       navigate('/dashboard');
@@ -109,6 +110,16 @@ const Register: React.FC = () => {
           error={errors.email}
           required
           placeholder="Enter your email"
+        />
+
+        <FormInput
+          label="Phone Number (Optional)"
+          type="tel"
+          name="phone"
+          value={formData.phone}
+          onChange={handleInputChange}
+          placeholder="+254712345678"
+          helper="Include country code"
         />
 
         <div className="space-y-1">
