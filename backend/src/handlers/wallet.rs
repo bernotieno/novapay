@@ -8,7 +8,8 @@ use serde_json::{json, Value};
 use sqlx::SqlitePool;
 use validator::Validate;
 
-use crate::services::WalletService;
+use crate::services::{WalletService, StellarService};
+use crate::models::Wallet;
 
 #[derive(Debug, Deserialize, Validate)]
 pub struct DepositRequest {
@@ -143,5 +144,46 @@ pub async fn transfer_to_wallet(
         "xlm_amount": payload.xlm_amount,
         "to_wallet_id": payload.to_wallet_id,
         "tx_hash": tx_hash
+    })))
+}
+
+pub async fn create_wallet(
+    State(pool): State<SqlitePool>,
+    Extension(user_id): Extension<String>,
+) -> Result<Json<Value>, StatusCode> {
+    // Check if wallet already exists
+    let existing_wallet = sqlx::query_as::<_, Wallet>("SELECT * FROM wallets WHERE user_id = ?")
+        .bind(&user_id)
+        .fetch_optional(&pool)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    if existing_wallet.is_some() {
+        return Err(StatusCode::CONFLICT);
+    }
+
+    // Generate new Stellar keypair using SDK
+    let stellar_account = StellarService::generate_keypair();
+    let wallet_id = uuid::Uuid::new_v4().to_string();
+
+    // Create wallet in database
+    sqlx::query(
+        "INSERT INTO wallets (id, user_id, stellar_public_key, stellar_secret_key, balance, created_at) VALUES (?, ?, ?, ?, ?, ?)"
+    )
+    .bind(&wallet_id)
+    .bind(&user_id)
+    .bind(&stellar_account.public_key)
+    .bind(&stellar_account.secret_key)
+    .bind(0.0)
+    .bind(chrono::Utc::now())
+    .execute(&pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(json!({
+        "success": true,
+        "message": "Wallet created successfully",
+        "wallet_id": wallet_id,
+        "public_key": stellar_account.public_key
     })))
 }

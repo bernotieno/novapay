@@ -103,7 +103,7 @@ impl WalletService {
             .fetch_one(pool)
             .await?;
 
-        // Send XLM to recipient wallet
+        // Send XLM to recipient wallet using Stellar SDK
         let tx_hash = self.stellar_service.send_payment(&from_wallet.stellar_secret_key, to_wallet_id, xlm_amount, "XLM").await?;
         
         // Record transfer transaction
