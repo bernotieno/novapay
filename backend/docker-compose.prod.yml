@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  novapay-backend:
+    build: .
+    ports:
+      - "10000:10000"
+    environment:
+      - DATABASE_URL=postgresql://novapay:${DB_PASSWORD}@db:5432/novapay
+      - JWT_SECRET=${JWT_SECRET}
+      - STELLAR_NETWORK=testnet
+      - STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
+      - FRIENDBOT_URL=https://friendbot.stellar.org
+      - FONBNK_CLIENT_ID=${FONBNK_CLIENT_ID}
+      - FONBNK_API_SIGNATURE_SECRET=${FONBNK_API_SIGNATURE_SECRET}
+      - FONBNK_URL_SIGNATURE_SECRET=${FONBNK_URL_SIGNATURE_SECRET}
+      - FONBNK_SOURCE_PARAM=${FONBNK_SOURCE_PARAM}
+      - FONBNK_BASE_URL=https://api.fonbnk.com
+      - PORT=10000
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=novapay
+      - POSTGRES_USER=novapay
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - novapay-backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
