@@ -99,11 +99,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .merge(protected_routes)
         .layer(cors)
         .with_state(match pool {
-            DatabasePool::Sqlite(sqlite_pool) => sqlite_pool,
-            DatabasePool::Postgres(_) => panic!("PostgreSQL not fully implemented yet - use SQLite for now"),
-        });
+    DatabasePool::Sqlite(sqlite_pool) => sqlite_pool,
+    DatabasePool::Postgres(pg_pool) => pg_pool,
+});
 
     let port = env::var("PORT").unwrap_or_else(|_| "3000".to_string());
+    println!("Using database URL: {}", database_url);
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
     
     println!("🚀 NovaPay Backend running on port {} with wallet balances initialized", port);
