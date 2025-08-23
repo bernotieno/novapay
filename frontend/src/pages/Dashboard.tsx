@@ -20,6 +20,7 @@ import SendMoneyForm from '../components/SendMoneyForm';
 import TransactionList from '../components/TransactionList';
 import ThemeToggle from '../components/ThemeToggle';
 import { apiService, type Transaction as ApiTransaction } from '../services/api';
+import { FonbnkDeposit } from '../components/FonbnkDeposit';
 
 interface Transaction {
   id: string;
@@ -37,7 +38,7 @@ const Dashboard: React.FC = () => {
   const [walletBalance, setWalletBalance] = useState({ xlm_balance: 0, kes_equivalent: 0, wallet_id: '' });
   const [activeTab, setActiveTab] = useState('overview');
   const [showSendForm, setShowSendForm] = useState(false);
-  const [activeWalletTab, setActiveWalletTab] = useState<'overview' | 'deposit' | 'withdraw' | 'transfer'>('overview');
+  const [activeWalletTab, setActiveWalletTab] = useState<'overview' | 'deposit' | 'withdraw' | 'transfer' | 'fonbnk'>('overview');
   const [sendForm, setSendForm] = useState({
     amount: '',
     recipient: '',
@@ -233,6 +234,7 @@ const Dashboard: React.FC = () => {
               onDeposit={() => setActiveWalletTab('deposit')}
               onWithdraw={() => setActiveWalletTab('withdraw')}
               onTransfer={() => setActiveWalletTab('transfer')}
+              onFonbnkDeposit={() => setActiveWalletTab('fonbnk')}
             />
             {renderWalletContent()}
           </div>
@@ -308,6 +310,8 @@ const Dashboard: React.FC = () => {
         return renderWithdrawForm();
       case 'transfer':
         return renderTransferForm();
+      case 'fonbnk':
+        return renderFonbnkDeposit();
       default:
         return null;
     }
@@ -454,6 +458,27 @@ const Dashboard: React.FC = () => {
         </Button>
       </form>
     </DashboardCard>
+  );
+
+  const renderFonbnkDeposit = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold text-secondary dark:text-white">
+          Deposit via Airtime
+        </h2>
+        <Button variant="outline" onClick={() => setActiveWalletTab('overview')}>
+          Back to Wallet
+        </Button>
+      </div>
+      <FonbnkDeposit 
+        onDepositComplete={(newBalance) => {
+          setWalletBalance(prev => ({ ...prev, xlm_balance: newBalance }));
+          setActiveWalletTab('overview');
+          loadWalletBalance();
+          loadTransactions();
+        }}
+      />
+    </div>
   );
 
   if (!user) {

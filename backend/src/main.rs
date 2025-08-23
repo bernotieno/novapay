@@ -56,6 +56,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Public routes
         .route("/auth/register", post(handlers::register))
         .route("/auth/login", post(handlers::login))
+        // Fonbnk routes (public for testing)
+        .route("/fonbnk/deposit", post(handlers::deposit_via_fonbnk))
+        .route("/fonbnk/rate", post(handlers::get_fonbnk_rate))
         // Merge protected routes
         .merge(protected_routes)
         .layer(CorsLayer::permissive())
