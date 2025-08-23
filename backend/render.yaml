@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: novapay-backend
+    env: rust
+    buildCommand: cargo build --release
+    startCommand: ./target/release/novapay-backend
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: STELLAR_NETWORK
+        value: testnet
+      - key: STELLAR_HORIZON_URL
+        value: https://horizon-testnet.stellar.org
+      - key: FRIENDBOT_URL
+        value: https://friendbot.stellar.org
+      - key: SOROBAN_CONTRACT_ID
+        sync: false
+      - key: FONBNK_CLIENT_ID
+        sync: false
+      - key: FONBNK_API_SIGNATURE_SECRET
+        sync: false
+      - key: FONBNK_URL_SIGNATURE_SECRET
+        sync: false
+      - key: FONBNK_SOURCE_PARAM
+        sync: false
+      - key: FONBNK_BASE_URL
+        value: https://api.fonbnk.com
+      - key: PORT
+        value: 10000
