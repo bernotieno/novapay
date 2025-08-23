@@ -9,6 +9,7 @@ interface WalletCardProps {
   onDeposit: () => void;
   onWithdraw: () => void;
   onTransfer: () => void;
+  onFonbnkDeposit?: () => void;
 }
 
 const WalletCard: React.FC<WalletCardProps> = ({
@@ -18,6 +19,7 @@ const WalletCard: React.FC<WalletCardProps> = ({
   onDeposit,
   onWithdraw,
   onTransfer,
+  onFonbnkDeposit,
 }) => {
   const [showInKes, setShowInKes] = useState(false);
   const [showWalletId, setShowWalletId] = useState(false);
@@ -80,31 +82,43 @@ const WalletCard: React.FC<WalletCardProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onDeposit}
-          className="text-white border-white/30 hover:bg-white/10"
-        >
-          Deposit
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onWithdraw}
-          className="text-white border-white/30 hover:bg-white/10"
-        >
-          Withdraw
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onTransfer}
-          className="text-white border-white/30 hover:bg-white/10"
-        >
-          Transfer
-        </Button>
+      <div className="space-y-2">
+        <div className="grid grid-cols-3 gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onDeposit}
+            className="text-white border-white/30 hover:bg-white/10"
+          >
+            Deposit
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onWithdraw}
+            className="text-white border-white/30 hover:bg-white/10"
+          >
+            Withdraw
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onTransfer}
+            className="text-white border-white/30 hover:bg-white/10"
+          >
+            Transfer
+          </Button>
+        </div>
+        {onFonbnkDeposit && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onFonbnkDeposit}
+            className="w-full text-white border-white/30 hover:bg-white/10 bg-orange-500/20"
+          >
+            📱 Deposit via Airtime
+          </Button>
+        )}
       </div>
     </div>
   );
