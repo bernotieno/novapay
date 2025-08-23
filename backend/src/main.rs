@@ -27,34 +27,72 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
     fmt::init();
 
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    println!("🚀 Starting NovaPay Backend...");
+    
+    let database_url = match env::var("DATABASE_URL") {
+        Ok(url) => {
+            println!("✅ DATABASE_URL found");
+            url
+        }
+        Err(_) => {
+            eprintln!("❌ DATABASE_URL environment variable is required");
+            std::process::exit(1);
+        }
+    };
     
     // Determine database type and create appropriate pool
+    println!("🔌 Connecting to database...");
     let pool = if database_url.starts_with("postgres://") || database_url.starts_with("postgresql://") {
-        let pg_pool = PgPool::connect(&database_url).await?;
-        DatabasePool::Postgres(pg_pool)
+        println!("📊 Using PostgreSQL database");
+        match PgPool::connect(&database_url).await {
+            Ok(pg_pool) => {
+                println!("✅ PostgreSQL connection successful");
+                DatabasePool::Postgres(pg_pool)
+            }
+            Err(e) => {
+                eprintln!("❌ Failed to connect to PostgreSQL: {}", e);
+                std::process::exit(1);
+            }
+        }
     } else {
-        let sqlite_pool = SqlitePool::connect(&database_url).await?;
-        DatabasePool::Sqlite(sqlite_pool)
+        println!("📊 Using SQLite database");
+        match SqlitePool::connect(&database_url).await {
+            Ok(sqlite_pool) => {
+                println!("✅ SQLite connection successful");
+                DatabasePool::Sqlite(sqlite_pool)
+            }
+            Err(e) => {
+                eprintln!("❌ Failed to connect to SQLite: {}", e);
+                std::process::exit(1);
+            }
+        }
     };
 
     // Run migrations based on database type
+    println!("🔄 Running database migrations...");
     match &pool {
         DatabasePool::Sqlite(sqlite_pool) => {
-            sqlx::migrate!("./migrations").run(sqlite_pool).await?;
+            if let Err(e) = sqlx::migrate!("./migrations").run(sqlite_pool).await {
+                eprintln!("❌ SQLite migration failed: {}", e);
+                std::process::exit(1);
+            }
             // Initialize wallet balances for existing wallets
             sqlx::query("UPDATE wallets SET balance = 1000.0 WHERE balance = 0.0 OR balance IS NULL")
                 .execute(sqlite_pool)
                 .await?;
         }
         DatabasePool::Postgres(pg_pool) => {
-            sqlx::migrate!("./migrations").run(pg_pool).await?;
+            if let Err(e) = sqlx::migrate!("./migrations").run(pg_pool).await {
+                eprintln!("❌ PostgreSQL migration failed: {}", e);
+                std::process::exit(1);
+            }
             // Initialize wallet balances for existing wallets
             sqlx::query("UPDATE wallets SET balance = 1000.0 WHERE balance = 0.0 OR balance IS NULL")
                 .execute(pg_pool)
                 .await?;
         }
     }
+    println!("✅ Database migrations completed");
 
     // Protected routes
     let protected_routes = Router::new()
@@ -104,11 +142,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 });
 
     let port = env::var("PORT").unwrap_or_else(|_| "3000".to_string());
-    println!("Using database URL: {}", database_url);
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
+    println!("🌐 Binding to port: {}", port);
+    
+    let listener = match tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await {
+        Ok(listener) => {
+            println!("✅ Successfully bound to 0.0.0.0:{}", port);
+            listener
+        }
+        Err(e) => {
+            eprintln!("❌ Failed to bind to port {}: {}", port, e);
+            std::process::exit(1);
+        }
+    };
     
     println!("🚀 NovaPay Backend running on port {} with wallet balances initialized", port);
-    axum::serve(listener, app).await?;
+    
+    if let Err(e) = axum::serve(listener, app).await {
+        eprintln!("❌ Server error: {}", e);
+        std::process::exit(1);
+    }
 
     Ok(())
 }
