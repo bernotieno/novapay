@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'https://d1346bf0d254.ngrok-free.app';
 
 interface WalletCreateResponse {
   public_key: string;
