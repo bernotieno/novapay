@@ -114,15 +114,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/sdk/wallet/trustline", post(handlers::create_trustline_sdk))
         .layer(from_fn(middleware::auth_middleware));
 
-    // Configure CORS for production
-    let cors = CorsLayer::new()
-        .allow_origin([
-            "http://localhost:5173".parse().unwrap(),
-            "https://novapay.onrender.com".parse().unwrap(),
-            "https://your-frontend-domain.com".parse().unwrap(),
-        ])
-        .allow_methods([axum::http::Method::GET, axum::http::Method::POST, axum::http::Method::PUT, axum::http::Method::DELETE])
-        .allow_headers([axum::http::header::CONTENT_TYPE, axum::http::header::AUTHORIZATION]);
+    // Configure CORS based on environment
+    let cors = if let Ok(origins) = env::var("CORS_ORIGINS") {
+        let origin_list: Vec<_> = origins.split(',').map(|s| s.parse().unwrap()).collect();
+        CorsLayer::new().allow_origin(origin_list)
+    } else {
+        CorsLayer::permissive()
+    }
+    .allow_methods([axum::http::Method::GET, axum::http::Method::POST, axum::http::Method::PUT, axum::http::Method::DELETE])
+    .allow_headers([axum::http::header::CONTENT_TYPE, axum::http::header::AUTHORIZATION]);
 
     let app = Router::new()
         // Health check
