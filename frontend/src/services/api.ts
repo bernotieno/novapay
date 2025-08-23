@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://d1346bf0d254.ngrok-free.app';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://84427bec402c.ngrok-free.app';
 
 interface User {
   id: string;
