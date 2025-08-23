@@ -11,13 +11,14 @@ import {
 } from 'lucide-react';
 import Button from '../components/Button';
 import FormInput from '../components/FormInput';
-import Card from '../components/Card';
+import DashboardCard from '../components/DashboardCard';
 import WalletCard from '../components/WalletCard';
 import Sidebar from '../components/Sidebar';
 import ProfileHeader from '../components/ProfileHeader';
 import ProfileSection from '../components/ProfileSection';
 import SendMoneyForm from '../components/SendMoneyForm';
 import TransactionList from '../components/TransactionList';
+import ThemeToggle from '../components/ThemeToggle';
 import { apiService, type Transaction as ApiTransaction } from '../services/api';
 
 interface Transaction {
@@ -36,9 +37,7 @@ const Dashboard: React.FC = () => {
   const [walletBalance, setWalletBalance] = useState({ xlm_balance: 0, kes_equivalent: 0, wallet_id: '' });
   const [activeTab, setActiveTab] = useState('overview');
   const [showSendForm, setShowSendForm] = useState(false);
-  const [showDepositForm, setShowDepositForm] = useState(false);
-  const [showWithdrawForm, setShowWithdrawForm] = useState(false);
-  const [showTransferForm, setShowTransferForm] = useState(false);
+  const [activeWalletTab, setActiveWalletTab] = useState<'overview' | 'deposit' | 'withdraw' | 'transfer'>('overview');
   const [sendForm, setSendForm] = useState({
     amount: '',
     recipient: '',
@@ -154,7 +153,7 @@ const Dashboard: React.FC = () => {
     try {
       await apiService.depositFromMpesa(parseFloat(depositForm.amount), depositForm.mpesaRef);
       setDepositForm({ amount: '', mpesaRef: '' });
-      setShowDepositForm(false);
+      setActiveWalletTab('overview');
       loadWalletBalance();
       loadTransactions();
       alert('Deposit successful! Your wallet has been funded.');
@@ -172,7 +171,7 @@ const Dashboard: React.FC = () => {
     try {
       await apiService.withdrawToMpesa(parseFloat(withdrawForm.amount), withdrawForm.mpesaNumber);
       setWithdrawForm({ amount: '', mpesaNumber: '' });
-      setShowWithdrawForm(false);
+      setActiveWalletTab('overview');
       loadWalletBalance();
       loadTransactions();
       alert('Withdrawal successful! Check your M-Pesa.');
@@ -190,7 +189,7 @@ const Dashboard: React.FC = () => {
     try {
       await apiService.transferToWallet(parseFloat(transferForm.amount), transferForm.walletId);
       setTransferForm({ amount: '', walletId: '' });
-      setShowTransferForm(false);
+      setActiveWalletTab('overview');
       loadWalletBalance();
       loadTransactions();
       alert('Transfer successful!');
@@ -231,11 +230,11 @@ const Dashboard: React.FC = () => {
               xlmBalance={walletBalance.xlm_balance}
               kesEquivalent={walletBalance.kes_equivalent}
               walletId={walletBalance.wallet_id}
-              onDeposit={() => setShowDepositForm(true)}
-              onWithdraw={() => setShowWithdrawForm(true)}
-              onTransfer={() => setShowTransferForm(true)}
+              onDeposit={() => setActiveWalletTab('deposit')}
+              onWithdraw={() => setActiveWalletTab('withdraw')}
+              onTransfer={() => setActiveWalletTab('transfer')}
             />
-            {renderWalletForms()}
+            {renderWalletContent()}
           </div>
         );
       default:
@@ -245,45 +244,49 @@ const Dashboard: React.FC = () => {
 
   const renderOverview = () => (
     <div className="space-y-6">
-      <WalletCard
-        xlmBalance={walletBalance.xlm_balance}
-        kesEquivalent={walletBalance.kes_equivalent}
-        walletId={walletBalance.wallet_id}
-        onDeposit={() => setShowDepositForm(true)}
-        onWithdraw={() => setShowWithdrawForm(true)}
-        onTransfer={() => setShowTransferForm(true)}
-      />
+      <div className="bg-gradient-to-r from-primary to-primary/80 text-white p-6 rounded-xl shadow-lg">
+        <div className="flex items-center space-x-2 mb-4">
+          <DollarSign className="h-6 w-6" />
+          <h3 className="text-lg font-semibold">Stellar Wallet</h3>
+        </div>
+        <div className="text-3xl font-bold mb-1">
+          {walletBalance.xlm_balance.toFixed(4)} XLM
+        </div>
+        <div className="text-white/70 text-sm">
+          ≈ KES {walletBalance.kes_equivalent.toFixed(2)}
+        </div>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="text-center">
-          <div className="bg-green-100 p-3 rounded-full w-12 h-12 mx-auto mb-3 flex items-center justify-center">
-            <DollarSign className="h-6 w-6 text-green-600" />
+        <DashboardCard className="text-center">
+          <div className="bg-green-100 dark:bg-green-900 p-3 rounded-full w-12 h-12 mx-auto mb-3 flex items-center justify-center">
+            <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
           </div>
-          <div className="text-2xl font-bold text-secondary mb-1">
+          <div className="text-2xl font-bold text-secondary dark:text-white mb-1">
             {walletBalance.xlm_balance.toFixed(2)} XLM
           </div>
-          <div className="text-sm text-gray-600">Wallet Balance</div>
-        </Card>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Wallet Balance</div>
+        </DashboardCard>
         
-        <Card className="text-center">
-          <div className="bg-blue-100 p-3 rounded-full w-12 h-12 mx-auto mb-3 flex items-center justify-center">
-            <Activity className="h-6 w-6 text-blue-600" />
+        <DashboardCard className="text-center">
+          <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full w-12 h-12 mx-auto mb-3 flex items-center justify-center">
+            <Activity className="h-6 w-6 text-blue-600 dark:text-blue-400" />
           </div>
-          <div className="text-2xl font-bold text-secondary mb-1">
+          <div className="text-2xl font-bold text-secondary dark:text-white mb-1">
             {transactions.length}
           </div>
-          <div className="text-sm text-gray-600">Transactions</div>
-        </Card>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Transactions</div>
+        </DashboardCard>
         
-        <Card className="text-center">
-          <div className="bg-primary/10 p-3 rounded-full w-12 h-12 mx-auto mb-3 flex items-center justify-center">
+        <DashboardCard className="text-center">
+          <div className="bg-primary/10 dark:bg-primary/20 p-3 rounded-full w-12 h-12 mx-auto mb-3 flex items-center justify-center">
             <CreditCard className="h-6 w-6 text-primary" />
           </div>
-          <div className="text-2xl font-bold text-secondary mb-1">
+          <div className="text-2xl font-bold text-secondary dark:text-white mb-1">
             ${(transactions.length * 0.5).toFixed(2)}
           </div>
-          <div className="text-sm text-gray-600">Fees Saved</div>
-        </Card>
+          <div className="text-sm text-gray-600 dark:text-gray-400">Fees Saved</div>
+        </DashboardCard>
       </div>
 
       <SendMoneyForm
@@ -297,22 +300,27 @@ const Dashboard: React.FC = () => {
     </div>
   );
 
-  const renderWalletForms = () => (
-    <div className="space-y-6">
-      {showDepositForm && renderDepositForm()}
-      {showWithdrawForm && renderWithdrawForm()}
-      {showTransferForm && renderTransferForm()}
-    </div>
-  );
+  const renderWalletContent = () => {
+    switch (activeWalletTab) {
+      case 'deposit':
+        return renderDepositForm();
+      case 'withdraw':
+        return renderWithdrawForm();
+      case 'transfer':
+        return renderTransferForm();
+      default:
+        return null;
+    }
+  };
 
   const renderDepositForm = () => (
-    <Card>
+    <DashboardCard>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-secondary flex items-center">
+        <h2 className="text-xl font-bold text-secondary dark:text-white flex items-center">
           <ArrowDownLeft className="mr-2 h-5 w-5" />
           Deposit from M-Pesa
         </h2>
-        <Button variant="outline" onClick={() => setShowDepositForm(false)}>
+        <Button variant="outline" onClick={() => setActiveWalletTab('overview')}>
           Cancel
         </Button>
       </div>
@@ -338,11 +346,11 @@ const Dashboard: React.FC = () => {
           helper="M-Pesa transaction code"
         />
         
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="text-sm text-gray-600 mb-2">
+        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
             Exchange Rate: 1 XLM = 120 KES
           </div>
-          <div className="text-sm font-medium">
+          <div className="text-sm font-medium dark:text-white">
             You will receive: {depositForm.amount ? (parseFloat(depositForm.amount) / 120).toFixed(4) : '0'} XLM
           </div>
         </div>
@@ -352,17 +360,17 @@ const Dashboard: React.FC = () => {
           Deposit to Wallet
         </Button>
       </form>
-    </Card>
+    </DashboardCard>
   );
 
   const renderWithdrawForm = () => (
-    <Card>
+    <DashboardCard>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-secondary flex items-center">
+        <h2 className="text-xl font-bold text-secondary dark:text-white flex items-center">
           <ArrowUpRight className="mr-2 h-5 w-5" />
           Withdraw to M-Pesa
         </h2>
-        <Button variant="outline" onClick={() => setShowWithdrawForm(false)}>
+        <Button variant="outline" onClick={() => setActiveWalletTab('overview')}>
           Cancel
         </Button>
       </div>
@@ -389,11 +397,11 @@ const Dashboard: React.FC = () => {
           helper="Include country code"
         />
         
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="text-sm text-gray-600 mb-2">
+        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
             Exchange Rate: 1 XLM = 120 KES
           </div>
-          <div className="text-sm font-medium">
+          <div className="text-sm font-medium dark:text-white">
             You will receive: KES {withdrawForm.amount ? (parseFloat(withdrawForm.amount) * 120).toFixed(2) : '0'}
           </div>
         </div>
@@ -403,17 +411,17 @@ const Dashboard: React.FC = () => {
           Withdraw to M-Pesa
         </Button>
       </form>
-    </Card>
+    </DashboardCard>
   );
 
   const renderTransferForm = () => (
-    <Card>
+    <DashboardCard>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-secondary flex items-center">
+        <h2 className="text-xl font-bold text-secondary dark:text-white flex items-center">
           <Send className="mr-2 h-5 w-5" />
           Transfer to Wallet
         </h2>
-        <Button variant="outline" onClick={() => setShowTransferForm(false)}>
+        <Button variant="outline" onClick={() => setActiveWalletTab('overview')}>
           Cancel
         </Button>
       </div>
@@ -445,7 +453,7 @@ const Dashboard: React.FC = () => {
           Transfer XLM
         </Button>
       </form>
-    </Card>
+    </DashboardCard>
   );
 
   if (!user) {
@@ -453,7 +461,7 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex">
       <Sidebar
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -461,19 +469,22 @@ const Dashboard: React.FC = () => {
       
       <div className="flex-1 flex flex-col lg:ml-0">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+        <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center space-x-4">
-                <h1 className="text-xl font-semibold text-secondary capitalize">
+                <h1 className="text-xl font-semibold text-secondary dark:text-white capitalize">
                   {activeTab === 'overview' ? 'Dashboard' : activeTab}
                 </h1>
               </div>
-              <ProfileHeader
-                user={user}
-                onLogout={handleLogout}
-                onProfileClick={() => setActiveTab('profile')}
-              />
+              <div className="flex items-center space-x-4">
+                <ThemeToggle />
+                <ProfileHeader
+                  user={user}
+                  onLogout={handleLogout}
+                  onProfileClick={() => setActiveTab('profile')}
+                />
+              </div>
             </div>
           </div>
         </header>
@@ -488,12 +499,12 @@ const Dashboard: React.FC = () => {
           
           {/* Right Sidebar - Only on overview */}
           {activeTab === 'overview' && (
-            <aside className="hidden xl:block w-80 bg-white border-l border-gray-200 p-6 sticky top-16 h-screen overflow-y-auto">
+            <aside className="hidden xl:block w-80 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 p-6 sticky top-16 h-screen overflow-y-auto">
               <div className="space-y-6">
                 <TransactionList transactions={transactions} />
                 
-                <Card>
-                  <h3 className="text-lg font-semibold text-secondary mb-4">
+                <DashboardCard>
+                  <h3 className="text-lg font-semibold text-secondary dark:text-white mb-4">
                     Need Help?
                   </h3>
                   <div className="space-y-3">
@@ -522,7 +533,7 @@ const Dashboard: React.FC = () => {
                       Rate & Fees
                     </a>
                   </div>
-                </Card>
+                </DashboardCard>
               </div>
             </aside>
           )}
