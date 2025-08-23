@@ -1,1 +1,271 @@
-🚀 NovaPay Backend running on port 3000
+   Compiling novapay-backend v0.1.0 (/home/ombewa/Desktop/github/novapay/backend)
+warning: unused import: `std::collections::HashMap`
+ --> src/services/sms.rs:1:5
+  |
+1 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `serde_json::json`
+ --> src/services/stellar_sdk.rs:2:5
+  |
+2 | use serde_json::json;
+  |     ^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::env`
+ --> src/services/stellar_sdk.rs:3:5
+  |
+3 | use std::env;
+  |     ^^^^^^^^
+
+warning: unused import: `stellar_sdk::*`
+  --> src/services/mod.rs:13:9
+   |
+13 | pub use stellar_sdk::*;
+   |         ^^^^^^^^^^^^^^
+
+warning: unused variable: `rng`
+  --> src/wallet_sdk.rs:63:17
+   |
+63 |         let mut rng = OsRng;
+   |                 ^^^ help: if this is intentional, prefix it with an underscore: `_rng`
+   |
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: variable does not need to be mutable
+  --> src/wallet_sdk.rs:63:13
+   |
+63 |         let mut rng = OsRng;
+   |             ----^^^
+   |             |
+   |             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` on by default
+
+warning: fields `phone_number`, `airtime_amount`, and `currency` are never read
+  --> src/handlers/fonbnk.rs:11:9
+   |
+10 | pub struct FonbnkDepositRequest {
+   |            -------------------- fields in this struct
+11 |     pub phone_number: String,
+   |         ^^^^^^^^^^^^
+12 |     pub airtime_amount: f64,
+   |         ^^^^^^^^^^^^^^
+13 |     pub currency: String, // KES, UGX, TZS
+   |         ^^^^^^^^
+   |
+   = note: `FonbnkDepositRequest` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` on by default
+
+warning: struct `FonbnkDepositResponse` is never constructed
+  --> src/handlers/fonbnk.rs:17:12
+   |
+17 | pub struct FonbnkDepositResponse {
+   |            ^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `deposit_via_fonbnk` is never used
+  --> src/handlers/fonbnk.rs:26:14
+   |
+26 | pub async fn deposit_via_fonbnk(
+   |              ^^^^^^^^^^^^^^^^^^
+
+warning: function `add_xlm_to_wallet` is never used
+  --> src/handlers/fonbnk.rs:73:10
+   |
+73 | async fn add_xlm_to_wallet(
+   |          ^^^^^^^^^^^^^^^^^
+
+warning: struct `FonbnkRateResponse` is never constructed
+   --> src/handlers/fonbnk.rs:114:12
+    |
+114 | pub struct FonbnkRateResponse {
+    |            ^^^^^^^^^^^^^^^^^^
+
+warning: function `get_fonbnk_rate` is never used
+   --> src/handlers/fonbnk.rs:120:14
+    |
+120 | pub async fn get_fonbnk_rate(
+    |              ^^^^^^^^^^^^^^^
+
+warning: field `phone_number` is never read
+  --> src/handlers/fonbnk_simple.rs:10:9
+   |
+9  | pub struct FonbnkDepositRequest {
+   |            -------------------- field in this struct
+10 |     pub phone_number: String,
+   |         ^^^^^^^^^^^^
+   |
+   = note: `FonbnkDepositRequest` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: function `create_wallet` is never used
+   --> src/handlers/wallet.rs:150:14
+    |
+150 | pub async fn create_wallet(
+    |              ^^^^^^^^^^^^^
+
+warning: struct `WalletResponse` is never constructed
+  --> src/models/wallet.rs:15:12
+   |
+15 | pub struct WalletResponse {
+   |            ^^^^^^^^^^^^^^
+
+warning: struct `FonbnkConvertRequest` is never constructed
+ --> src/services/fonbnk.rs:6:12
+  |
+6 | pub struct FonbnkConvertRequest {
+  |            ^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `success`, `transaction_id`, `usd_amount`, `exchange_rate`, `status`, and `message` are never read
+  --> src/services/fonbnk.rs:14:9
+   |
+13 | pub struct FonbnkConvertResponse {
+   |            --------------------- fields in this struct
+14 |     pub success: bool,
+   |         ^^^^^^^
+15 |     pub transaction_id: String,
+   |         ^^^^^^^^^^^^^^
+16 |     pub usd_amount: f64,
+   |         ^^^^^^^^^^
+17 |     pub exchange_rate: f64,
+   |         ^^^^^^^^^^^^^
+18 |     pub status: String,
+   |         ^^^^^^
+19 |     pub message: Option<String>,
+   |         ^^^^^^^
+   |
+   = note: `FonbnkConvertResponse` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: struct `FonbnkService` is never constructed
+  --> src/services/fonbnk.rs:23:12
+   |
+23 | pub struct FonbnkService {
+   |            ^^^^^^^^^^^^^
+
+warning: associated items `new`, `convert_airtime`, and `get_conversion_rate` are never used
+  --> src/services/fonbnk.rs:33:12
+   |
+32 | impl FonbnkService {
+   | ------------------ associated items in this implementation
+33 |     pub fn new() -> Self {
+   |            ^^^
+...
+57 |     pub async fn convert_airtime(
+   |                  ^^^^^^^^^^^^^^^
+...
+93 |     pub async fn get_conversion_rate(
+   |                  ^^^^^^^^^^^^^^^^^^^
+
+warning: field `contract_id` is never read
+  --> src/services/stellar.rs:21:5
+   |
+19 | pub struct StellarService {
+   |            -------------- field in this struct
+20 |     friendbot_client: Client,
+21 |     contract_id: String,
+   |     ^^^^^^^^^^^
+
+warning: fields `client` and `horizon_url` are never read
+ --> src/services/stellar_sdk.rs:6:5
+  |
+5 | pub struct StellarSDK {
+  |            ---------- fields in this struct
+6 |     client: Client,
+  |     ^^^^^^
+7 |     horizon_url: String,
+  |     ^^^^^^^^^^^
+
+warning: methods `get_account_balance` and `fund_account` are never used
+  --> src/services/stellar_sdk.rs:46:18
+   |
+10 | impl StellarSDK {
+   | --------------- methods in this implementation
+...
+46 |     pub async fn get_account_balance(&self, public_key: &str) -> Result<f64, Box<dyn std::error::Error>> {
+   |                  ^^^^^^^^^^^^^^^^^^^
+...
+72 |     pub async fn fund_account(&self, public_key: &str) -> Result<bool, Box<dyn std::error::Error>> {
+   |                  ^^^^^^^^^^^^
+
+warning: field `balances` is never read
+  --> src/services/wallet.rs:11:5
+   |
+7  | pub struct WalletService {
+   |            ------------- field in this struct
+...
+11 |     balances: HashMap<String, f64>,
+   |     ^^^^^^^^
+
+warning: variants `InsufficientBalance` and `TransactionFailed` are never constructed
+  --> src/wallet_sdk.rs:13:5
+   |
+7  | pub enum WalletError {
+   |          ----------- variants in this enum
+...
+13 |     InsufficientBalance,
+   |     ^^^^^^^^^^^^^^^^^^^
+14 |     #[error("Transaction failed: {0}")]
+15 |     TransactionFailed(String),
+   |     ^^^^^^^^^^^^^^^^^
+   |
+   = note: `WalletError` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: field `secret_key` is never read
+  --> src/wallet_sdk.rs:41:5
+   |
+39 | pub struct NovaPayWallet {
+   |            ------------- field in this struct
+40 |     public_key: String,
+41 |     secret_key: String,
+   |     ^^^^^^^^^^
+
+warning: struct `WalletManager` is never constructed
+   --> src/wallet_sdk.rs:144:12
+    |
+144 | pub struct WalletManager {
+    |            ^^^^^^^^^^^^^
+
+warning: associated items `new`, `add_wallet`, `get_wallet`, and `bulk_payment` are never used
+   --> src/wallet_sdk.rs:150:12
+    |
+149 | impl WalletManager {
+    | ------------------ associated items in this implementation
+150 |     pub fn new(config: WalletConfig) -> Self {
+    |            ^^^
+...
+157 |     pub fn add_wallet(&mut self, id: &str, secret_key: &str) -> Result<(), WalletError> {
+    |            ^^^^^^^^^^
+...
+163 |     pub fn get_wallet(&self, id: &str) -> Option<&NovaPayWallet> {
+    |            ^^^^^^^^^^
+...
+167 |     pub async fn bulk_payment(
+    |                  ^^^^^^^^^^^^
+
+warning: methods `validate_stellar_address` and `validate_stellar_secret` are never used
+   --> src/wallet_sdk_service.rs:103:12
+    |
+35  | impl WalletSDKService {
+    | --------------------- methods in this implementation
+...
+103 |     pub fn validate_stellar_address(&self, address: &str) -> bool {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^
+...
+107 |     pub fn validate_stellar_secret(&self, secret: &str) -> bool {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `novapay-backend` (bin "novapay-backend") generated 28 warnings (run `cargo fix --bin "novapay-backend"` to apply 5 suggestions)
+    Finished `release` profile [optimized] target(s) in 27.76s
+warning: the following packages contain code that will be rejected by a future version of Rust: sqlx-postgres v0.7.4
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running `target/release/novapay-backend`
+🚀 NovaPay Backend running on port 3000 with wallet balances initialized
+🚀 Simulating Stellar payment:
+   From: SAD5CB6D
+   To: G96240d34782e363bbf85b42530ea4cce40bb7748fee7db546c1f153
+   Amount: 5 XLM
+✅ Transaction hash: 0ac778efd13b52b1e9dabc7db75a49068484979698e12ac8a8eda9cca3c7fd02
+💰 Transfer complete:
+   Sender b0003fde-6403-4412-979d-8320c5e63f5b: 995 XLM → 990 XLM
+   Recipient 5687e91f-d33c-4ac6-9608-1e4a8e75f600: 1000 XLM → 1005 XLM
+🔄 Transfer: 5 XLM from b0003fde-6403-4412-979d-8320c5e63f5b to G96240d34782e363bbf85b42530ea4cce40bb7748fee7db546c1f153 (Hash: 0ac778efd13b52b1e9dabc7db75a49068484979698e12ac8a8eda9cca3c7fd02)

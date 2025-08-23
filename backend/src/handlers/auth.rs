@@ -25,6 +25,12 @@ pub async fn register(
     let user_id = Uuid::new_v4().to_string();
     let stellar_account = StellarService::generate_keypair();
 
+    // Handle empty phone number strings as None
+    let phone_number = payload.phone_number
+        .as_ref()
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| s.to_string());
+
     let result = sqlx::query(
         r#"
         INSERT INTO users (id, email, password_hash, full_name, phone_number, stellar_public_key)
@@ -35,7 +41,7 @@ pub async fn register(
     .bind(&payload.email)
     .bind(&password_hash)
     .bind(&payload.full_name)
-    .bind(&payload.phone_number)
+    .bind(&phone_number)
     .bind(&stellar_account.public_key)
     .execute(&pool)
     .await;
@@ -66,7 +72,7 @@ pub async fn register(
                     "id": user_id,
                     "email": payload.email,
                     "full_name": payload.full_name,
-                    "phone_number": payload.phone_number,
+                    "phone_number": phone_number,
                     "stellar_public_key": stellar_account.public_key
                 }
             })))
