@@ -117,12 +117,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Configure CORS based on environment
     let cors = if let Ok(origins) = env::var("CORS_ORIGINS") {
         let origin_list: Vec<_> = origins.split(',').map(|s| s.parse().unwrap()).collect();
-        CorsLayer::new().allow_origin(origin_list)
+        CorsLayer::new()
+            .allow_origin(origin_list)
+            .allow_methods([axum::http::Method::GET, axum::http::Method::POST, axum::http::Method::PUT, axum::http::Method::DELETE])
+            .allow_headers([axum::http::header::CONTENT_TYPE, axum::http::header::AUTHORIZATION])
     } else {
-        CorsLayer::permissive()
-    }
-    .allow_methods([axum::http::Method::GET, axum::http::Method::POST, axum::http::Method::PUT, axum::http::Method::DELETE])
-    .allow_headers([axum::http::header::CONTENT_TYPE, axum::http::header::AUTHORIZATION]);
+        CorsLayer::new()
+            .allow_origin(tower_http::cors::Any)
+            .allow_methods([axum::http::Method::GET, axum::http::Method::POST, axum::http::Method::PUT, axum::http::Method::DELETE])
+            .allow_headers([axum::http::header::CONTENT_TYPE, axum::http::header::AUTHORIZATION])
+    };
 
     let app = Router::new()
         // Health check
