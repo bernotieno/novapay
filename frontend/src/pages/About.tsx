@@ -29,14 +29,19 @@ const About: React.FC = () => {
   return (
     <div className="space-y-16 sm:space-y-20">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary/10 to-primary/5 py-16 sm:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative bg-gradient-to-br from-primary/10 to-primary/5 py-24 sm:py-32 overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')] bg-cover bg-center bg-no-repeat"></div>
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/60 to-black/70"></div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl sm:text-5xl font-bold text-secondary mb-6">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-8 drop-shadow-lg">
               Empowering East Africa Through
-              <span className="block text-primary">Financial Innovation</span>
+              <span className="block text-primary drop-shadow-lg">Financial Innovation</span>
             </h1>
-            <p className="text-lg sm:text-xl text-gray-700 leading-relaxed">
+            <p className="text-lg sm:text-xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
               NovaPay was born from a simple belief: sending money to your loved ones 
               shouldn't be expensive, slow, or complicated. We're on a mission to democratize 
               cross-border payments and bring financial inclusion to every corner of East Africa.

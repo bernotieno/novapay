@@ -38,20 +38,12 @@ const Navbar: React.FC = () => {
                 {item.name}
               </Link>
             ))}
-            <div className="flex items-center space-x-4">
-              <Link
-                to="/login"
-                className="text-gray-700 hover:text-primary font-semibold transition-all duration-300 px-4 py-2 rounded-xl hover:bg-primary/5 hover:-translate-y-0.5"
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 transform"
-              >
-                Get Started
-              </Link>
-            </div>
+            <Link
+              to="/register"
+              className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 transform"
+            >
+              Get Started
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -83,14 +75,7 @@ const Navbar: React.FC = () => {
                   {item.name}
                 </Link>
               ))}
-              <div className="pt-4 space-y-2">
-                <Link
-                  to="/login"
-                  className="block px-4 py-3 text-gray-700 hover:text-primary font-semibold transition-all duration-300 rounded-xl hover:bg-primary/5"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Login
-                </Link>
+              <div className="pt-4">
                 <Link
                   to="/register"
                   className="block bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white px-4 py-3 rounded-xl font-semibold transition-all duration-300 text-center shadow-lg"
