@@ -1,6 +1,6 @@
 # Build stage
-FROM rust:1.75 as builder
-
+FROM rust:latest as builder
+RUN USER=root cargo new --bin app
 WORKDIR /app
 
 # 1. Copy only manifests first (to cache deps)
