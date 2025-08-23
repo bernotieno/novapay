@@ -2,11 +2,17 @@
 FROM rust:1.75 as builder
 
 WORKDIR /app
+
+# 1. Copy only manifests first (to cache deps)
 COPY Cargo.toml Cargo.lock ./
+RUN mkdir src && echo "fn main() {}" > src/main.rs
+RUN cargo build --release || true
+
+# 2. Now copy real source code
 COPY src ./src
 COPY migrations ./migrations
 
-# Build the application
+# 3. Build actual application
 RUN cargo build --release
 
 # Runtime stage
@@ -20,7 +26,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy the binary from builder stage
+# Copy binary + migrations
 COPY --from=builder /app/target/release/novapay-backend .
 COPY --from=builder /app/migrations ./migrations
 
